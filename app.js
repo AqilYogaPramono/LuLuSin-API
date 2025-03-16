@@ -7,6 +7,25 @@ const port = process.env.PORT
 
 var indexRouter = require('./routes/index');
 
+// //folder auth
+// var authRegisterRouter = require('./routes/auth/register')
+// var authLoginRouter = require('./routes/auth/login')
+
+// //folder admin
+// var adminDashboardRouter = require('./routes/admin/dashboard')
+// var adminStudentRouter = require('./routes/admin/student')
+// var adminteacherRouter = require('./routes/admin/teacher')
+
+// //folder student
+// var studentDashboardRouter = require('./routes/students/dashboard')
+// var studentTryoutRouter = require('./routes/students/tryout')
+
+// //folder teacher
+// var teacherDashboardRouter = require('./routes/teachers/dashboard')
+// var teacherCategorySubjectRouter = require('./routes/teachers/categorySubject')
+// var teacherSubjectRouter = require('./routes/teachers/subject')
+// var teachertryoutRouter = require('./routes/teachers/tryout')
+
 var app = express();
 
 app.use(logger('dev'));
@@ -15,6 +34,27 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+
+// //folder auth
+// app.use('/API', authRegisterRouter)
+// app.use('/API', authLoginRouter)
+
+// //folder admin
+// app.use('/API', adminDashboardRouter)
+// app.use('/API', adminStudentRouter)
+// app.use('/API', adminteacherRouter)
+
+// //folder student
+// app.use('/API', studentDashboardRouter)
+// app.use('/API', studentTryoutRouter)
+
+// //folder teacher
+// app.use('/API', teacherDashboardRouter)
+// app.use('/API', teacherCategorySubjectRouter)
+// app.use('/API', teacherSubjectRouter)
+// app.use('/API', teachertryoutRouter)
+
+
 
 app.listen(port, () => {
     console.log(`Running at http://localhost:${port}`)
