@@ -5,6 +5,10 @@ var dotenv = require('dotenv')
 dotenv.config()
 const port = process.env.PORT
 
+const { db, connectDB } = require('./config/database/connection');
+
+var { teacher } = require('./config/database/table/controler')
+
 var indexRouter = require('./routes/index');
 
 // //folder auth
@@ -14,7 +18,8 @@ var indexRouter = require('./routes/index');
 // //folder admin
 // var adminDashboardRouter = require('./routes/admin/dashboard')
 // var adminStudentRouter = require('./routes/admin/student')
-// var adminteacherRouter = require('./routes/admin/teacher')
+var adminteacherRouter = require('./routes/admin/teacher');
+const { error } = require('console');
 
 // //folder student
 // var studentDashboardRouter = require('./routes/students/dashboard')
@@ -42,7 +47,7 @@ app.use('/', indexRouter);
 // //folder admin
 // app.use('/API', adminDashboardRouter)
 // app.use('/API', adminStudentRouter)
-// app.use('/API', adminteacherRouter)
+app.use('/API', adminteacherRouter)
 
 // //folder student
 // app.use('/API', studentDashboardRouter)
@@ -54,10 +59,19 @@ app.use('/', indexRouter);
 // app.use('/API', teacherSubjectRouter)
 // app.use('/API', teachertryoutRouter)
 
-
-
 app.listen(port, () => {
     console.log(`Running at http://localhost:${port}`)
+})
+
+async function initialize() {
+    await connectDB()
+    await db.sync()
+    console.log("Database success sync")
+}
+
+initialize()
+.catch(error => {
+    console.error("Failed to initialize database: ", error)
 })
 
 module.exports = app;
