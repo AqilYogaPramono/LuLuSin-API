@@ -7,7 +7,7 @@ const port = process.env.PORT
 
 const { db, connectDB } = require('./config/database/connection');
 
-var { teacher, admin } = require('./config/database/table/controler')
+var { teacher, admin, information } = require('./config/database/table/controler')
 
 var indexRouter = require('./routes/index');
 
