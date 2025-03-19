@@ -1,7 +1,7 @@
 const {DataTypes} = require(`sequelize`)
 const {db} = require(`../connection`)
 
-const subjectCategoryTable = db.define(`subjectCategory`,{
+const subjectCategoryTable = db.define(`subjectcategory`,{
     subject_id:{
         type:DataTypes.INTEGER,
         primaryKey: true,
