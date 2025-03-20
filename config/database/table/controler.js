@@ -6,5 +6,6 @@ const tryout = require('./tryoutTable')
 const scoretryout = require('./scoreTryoutTable')
 const studentsanswer = require('./studentsAnswersTable')
 const student = require('./studentTable')
+const tryoutsubjectscore = require('./tryoutSubjectScoreTable')
 
-module.exports = { teacher, admin, information, subjectcategory, tryout, scoretryout, studentsanswer, student }
+module.exports = { teacher, admin, information, subjectcategory, tryout, scoretryout, studentsanswer, student, tryoutsubjectscore }
