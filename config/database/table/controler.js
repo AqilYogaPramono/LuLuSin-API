@@ -8,5 +8,6 @@ const studentsanswer = require('./studentsAnswersTable')
 const student = require('./studentTable')
 const tryoutsubjectscore = require('./tryoutSubjectScoreTable')
 const answerchoise = require('../table/answerChoicesTabel')
+const question = require('../table/questionTable')
 
-module.exports = { teacher, admin, information, subjectcategory, tryout, scoretryout, studentsanswer, student, tryoutsubjectscore, answerchoise }
+module.exports = { teacher, admin, information, subjectcategory, tryout, scoretryout, studentsanswer, student, tryoutsubjectscore, answerchoise, question }
