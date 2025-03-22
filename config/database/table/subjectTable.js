@@ -7,8 +7,9 @@ const subjectTable = db.define('subject', {
         primaryKey: true,
         autoIncrement: true
     },
-    id_category_subject: DataTypes.INTEGER,
-    subject: DataTypes.STRING
+    id_subject_category_: DataTypes.INTEGER,
+    subject_name: DataTypes.STRING,
+    time_limit: DataTypes.TIME
 })
 
 module.exports = subjectTable

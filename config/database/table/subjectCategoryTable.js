@@ -1,13 +1,13 @@
 const {DataTypes} = require(`sequelize`)
 const {db} = require(`../connection`)
 
-const subjectCategoryTable = db.define(`subjectcategory`,{
-    subject_id:{
+const subjectCategoryTable = db.define(`subject_category`,{
+    subject_category_id:{
         type:DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true 
     },
-    subject_name:DataTypes.STRING
+    subject_category_name:DataTypes.STRING
 })
 
 module.exports = subjectCategoryTable;
