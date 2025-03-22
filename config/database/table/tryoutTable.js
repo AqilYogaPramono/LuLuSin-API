@@ -7,7 +7,7 @@ const tryoutTable = db.define(`tryout`,{
         primaryKey:true,
         autoIncrement: true
     },
-    tryout_tittle:DataTypes.STRING
+    tryout_name:DataTypes.STRING
 })
 
 module.exports = tryoutTable
