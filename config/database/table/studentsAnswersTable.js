@@ -1,7 +1,7 @@
 const {DataTypes} = require(`sequelize`)
 const {db} = require(`../connection`)
 
-const studentsAnswerTable = db.define(`studens_tanswer`,{
+const studentsAnswerTable = db.define(`students_answer`,{
     student_answer_id:{
         type: DataTypes.INTEGER,
         primaryKey: true,
