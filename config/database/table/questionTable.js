@@ -10,7 +10,7 @@ const questionTable = db.define('question', {
     id_tryout: DataTypes.INTEGER,
     id_subject: DataTypes.INTEGER,
     question: DataTypes.TEXT,
-    image_question: DataTypes.STRING,
+    question_image: DataTypes.STRING,
     score: DataTypes.INTEGER
 })
 

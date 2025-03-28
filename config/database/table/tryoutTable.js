@@ -7,7 +7,11 @@ const tryoutTable = db.define(`tryout`,{
         primaryKey:true,
         autoIncrement: true
     },
-    tryout_name:DataTypes.STRING
+    tryout_name:DataTypes.STRING,
+    status: {
+        type: DataTypes.ENUM('hide', 'show'),
+        defaultValue: 'hide'
+    }
 })
 
 module.exports = tryoutTable

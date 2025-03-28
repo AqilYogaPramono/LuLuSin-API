@@ -8,7 +8,7 @@ const studentsAnswerTable = db.define(`students_answer`,{
         autoIncrement: true
     },
     id_student: DataTypes.INTEGER,
-    answer_choice_id: DataTypes.INTEGER,
+    answer_options_id: DataTypes.INTEGER,
     id_answer_choise: DataTypes.INTEGER
 })
 
