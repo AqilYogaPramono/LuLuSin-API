@@ -65,7 +65,7 @@ app.listen(port, () => {
 
 async function initialize() {
     await connectDB()
-    await db.sync()
+    await db.sync( { alter:true})
     console.log("Database success sync")
 }
 

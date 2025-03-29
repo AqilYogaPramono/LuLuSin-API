@@ -7,7 +7,7 @@ const subjectTable = db.define('subject', {
         primaryKey: true,
         autoIncrement: true
     },
-    id_subject_category_: DataTypes.INTEGER,
+    id_subject_category: DataTypes.INTEGER,
     subject_name: DataTypes.STRING,
     time_limit: DataTypes.TIME
 })
