@@ -7,7 +7,7 @@ const port = process.env.PORT
 
 const { db, connectDB } = require('./config/database/connection');
 
-var { teacher, admin, information, subjectcategory, tryout, tryoutScoreTable, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation} = require('./config/database/table/controler')
+var { teacher, admin, information, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation} = require('./config/database/table/controler')
 
 var indexRouter = require('./routes/index');
 
@@ -38,7 +38,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+app.use('/API', indexRouter);
 
 // //folder auth
 // app.use('/API', authRegisterRouter)
@@ -65,7 +65,7 @@ app.listen(port, () => {
 
 async function initialize() {
     await connectDB()
-    await db.sync( { alter:true})
+    await db.sync( { alter: true }) //force: true
     console.log("Database success sync")
 }
 
