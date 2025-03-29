@@ -1,7 +1,7 @@
 const {DataTypes} = require('sequelize')
 const {db} = require('../connection')
 
-const answerChoisesTable = db.define('answer_choise', {
+const answerOptionTable = db.define('answer_option', {
     answer_choise_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -11,4 +11,4 @@ const answerChoisesTable = db.define('answer_choise', {
     answer_options: DataTypes.TEXT
 })
 
-module.exports = answerChoisesTable
+module.exports = answerOptionTable

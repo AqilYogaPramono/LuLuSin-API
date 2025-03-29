@@ -7,7 +7,7 @@ const questionsExplanation = db.define('questions_explanation', {
         primaryKey: true,
         autoIncrement: true
     }, 
-    id_answer_choice: DataTypes.INTEGER,
+    id_answer_options: DataTypes.INTEGER,
     question_explanation: DataTypes.TEXT
 })
 
