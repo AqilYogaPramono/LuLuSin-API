@@ -1,4 +1,4 @@
-const {DataTypes, Model} = require('sequelize')
+const {DataTypes} = require('sequelize')
 const {db} = require('../connection')
 
 const questionsExplanation = db.define('questions_explanation', {
@@ -7,7 +7,7 @@ const questionsExplanation = db.define('questions_explanation', {
         primaryKey: true,
         autoIncrement: true
     }, 
-    id_answer_options: DataTypes.INTEGER,
+    id_answer_option: DataTypes.INTEGER,
     question_explanation: DataTypes.TEXT
 })
 
