@@ -8,7 +8,15 @@ class tryoutModel {
         } catch (err){
             throw err
         }
+    }
 
+    static async store(data) {
+        try {
+            const [result] = await db.query("insert into tryouts set tryout_name = ?", {replacements: [data.tryout_name]})
+            return result
+        } catch (err) {
+            throw err
+        }
     }
 }
 

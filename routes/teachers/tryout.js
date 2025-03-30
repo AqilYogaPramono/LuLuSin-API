@@ -15,6 +15,18 @@ router.get('/teacher/tryout', async (req, res, next) => {
 })
 
 //post judl tryout
+router.post('/teacher/tryout/create', async (req, res, next) => {
+    const { tryout_name } = req.body
+    const data = { tryout_name }
+
+    try {
+        await tryout.store(data)
+        res.status(201).json ({ message: 'CREATED'})
+    } catch (error) {
+        res.status(500).json ({ message: error.message })
+    }
+})
+
 //edit judul tryout
 //menampilkan kategori subjek beserta nama subejek dan soal yang sudah di buat
 //get soal, opsi jawaban, jawaban benar, pembahasan
