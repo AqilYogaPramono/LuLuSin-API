@@ -15,7 +15,8 @@ var indexRouter = require('./routes/index');
 // var authRegisterRouter = require('./routes/auth/register')
 var authLoginRouter = require('./routes/auth/login')
 
-// //folder admin
+// //folder 
+var adminDashboard = require('./routes/admin/dashboard')
 var adminStudentRouter = require('./routes/admin/student')
 var adminteacherRouter = require('./routes/admin/teacher');
 
@@ -43,6 +44,7 @@ app.use('/API', indexRouter);
 app.use('/API', authLoginRouter)
 
 // //folder admin
+app.use('/API', adminDashboard)
 app.use('/API', adminStudentRouter)
 app.use('/API', adminteacherRouter)
 
