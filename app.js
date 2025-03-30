@@ -11,9 +11,9 @@ var { teacher, admin, information, subjectcategory, tryout, tryoutScore, student
 
 var indexRouter = require('./routes/index');
 
-// //folder auth
+//folder auth
 // var authRegisterRouter = require('./routes/auth/register')
-// var authLoginRouter = require('./routes/auth/login')
+var authLoginRouter = require('./routes/auth/login')
 
 // //folder admin
 // var adminDashboardRouter = require('./routes/admin/dashboard')
@@ -40,9 +40,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/API', indexRouter);
 
-// //folder auth
+//folder auth
 // app.use('/API', authRegisterRouter)
-// app.use('/API', authLoginRouter)
+app.use('/API', authLoginRouter)
 
 // //folder admin
 // app.use('/API', adminDashboardRouter)
