@@ -7,7 +7,7 @@ const admin = require('../../models/adminModel')
 
 //post untuk login dnegan email dan password untuk siswa dan guru
 router.post('/login', async (req, res, next) => {
-    const { email, password } = req.body
+    let { email, password } = req.body
 
     if (!email) {
         return res.status(400).json ({ message: 'Email required'})
