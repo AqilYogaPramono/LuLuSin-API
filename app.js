@@ -19,17 +19,16 @@ var authLoginRouter = require('./routes/auth/login')
 // var adminDashboardRouter = require('./routes/admin/dashboard')
 // var adminStudentRouter = require('./routes/admin/student')
 var adminteacherRouter = require('./routes/admin/teacher');
-const { error } = require('console');
 
 // //folder student
 // var studentDashboardRouter = require('./routes/students/dashboard')
 // var studentTryoutRouter = require('./routes/students/tryout')
 
-// //folder teacher
+//folder teacher
 // var teacherDashboardRouter = require('./routes/teachers/dashboard')
 // var teacherCategorySubjectRouter = require('./routes/teachers/categorySubject')
 // var teacherSubjectRouter = require('./routes/teachers/subject')
-// var teachertryoutRouter = require('./routes/teachers/tryout')
+var teachertryoutRouter = require('./routes/teachers/tryout')
 
 var app = express();
 
@@ -53,11 +52,11 @@ app.use('/API', adminteacherRouter)
 // app.use('/API', studentDashboardRouter)
 // app.use('/API', studentTryoutRouter)
 
-// //folder teacher
+//folder teacher
 // app.use('/API', teacherDashboardRouter)
 // app.use('/API', teacherCategorySubjectRouter)
 // app.use('/API', teacherSubjectRouter)
-// app.use('/API', teachertryoutRouter)
+app.use('/API', teachertryoutRouter)
 
 app.listen(port, () => {
     console.log(`Running at http://localhost:${port}`)
