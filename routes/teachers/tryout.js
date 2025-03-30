@@ -27,6 +27,7 @@ router.post('/teacher/tryout/create', async (req, res, next) => {
     }
 })
 
+//edit judul tryout
 router.patch('/teacher/tryout/update/:id', async (req, res, next) => {
     let id = req.params.id
     let { tryout_name } = req.body
@@ -40,7 +41,18 @@ router.patch('/teacher/tryout/update/:id', async (req, res, next) => {
     }
 })
 
-//edit judul tryout
+//delete tryout byid
+router.delete('/teacher/tryout/delete/:id', async (req, res, next) => {
+    let id = req.params.id
+    try {
+        await tryout.delete(id)
+        res.status(200).json ({ message: 'OK'})
+    } catch (error) {
+        res.status(500).json ({ message: error.message})
+    }
+})
+
+
 //menampilkan kategori subjek beserta nama subejek dan soal yang sudah di buat
 //get soal, opsi jawaban, jawaban benar, pembahasan
 //post soal dan opsi soal
