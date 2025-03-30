@@ -3,7 +3,7 @@ var router = express.Router();
 const subjectcategory = require('../../models/subjectCategoryModel')
 
 // get tabel kategori subjek
-router.get('/teacher/categorysubject', async (req, res, next) => {
+router.get('/teacher/subjectcategory', async (req, res, next) => {
     try {
         let dataSubjectCategory = await subjectcategory.getall()
         res.status(200).json({ dataSubjectCategory })
