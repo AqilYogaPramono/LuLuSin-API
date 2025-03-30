@@ -17,6 +17,8 @@ const teacherTable = db.define(`teacher`,{
         unique: true
     },
     password: DataTypes.STRING
+}, {
+    timestamps: false
 })
 
 module.exports = teacherTable;

@@ -10,6 +10,8 @@ const subjectTable = db.define('subject', {
     id_subject_category: DataTypes.INTEGER,
     subject_name: DataTypes.STRING,
     time_limit: DataTypes.TIME
+}, {
+    timestamps: false
 })
 
 module.exports = subjectTable

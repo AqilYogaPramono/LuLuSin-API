@@ -8,6 +8,8 @@ const informationTable = db.define(`information`,{
         autoIncrement: true
     },
     snbt_start: DataTypes.DATE
+}, {
+    timestamps: false
 })
 
 module.exports = informationTable;

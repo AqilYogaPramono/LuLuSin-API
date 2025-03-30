@@ -8,6 +8,8 @@ const subjectCategoryTable = db.define(`subject_category`,{
         autoIncrement: true 
     },
     subject_category_name:DataTypes.STRING
+}, {
+    timestamps: false
 })
 
 module.exports = subjectCategoryTable;

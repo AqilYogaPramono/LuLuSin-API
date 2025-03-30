@@ -12,6 +12,8 @@ const questionTable = db.define('question', {
     question: DataTypes.TEXT,
     question_image: DataTypes.STRING,
     score: DataTypes.INTEGER
+}, {
+    timestamps: false
 })
 
 module.exports = questionTable

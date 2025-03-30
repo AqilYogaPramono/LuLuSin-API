@@ -12,6 +12,8 @@ const tryoutScoreTable = db.define(`tryout_score`,{
     total_correct: DataTypes.INTEGER,
     total_wrong: DataTypes.INTEGER,
     total_empty: DataTypes.INTEGER
+}, {
+    timestamps: false
 })
 
 module.exports = tryoutScoreTable

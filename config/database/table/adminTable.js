@@ -13,6 +13,8 @@ const adminTable = db.define(`admin`,{
         unique: true
     },
     password: DataTypes.STRING
+}, {
+    timestamps: false
 })
 
 module.exports = adminTable
