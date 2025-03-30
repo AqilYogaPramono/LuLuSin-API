@@ -18,6 +18,15 @@ class tryoutModel {
             throw err
         }
     }
+
+    static async update(id, data) {
+        try {
+            const [result] = await db.query("update tryouts set tryout_name = ? where tryout_id = ?", {replacements: [data.tryout_name, id]})
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = tryoutModel
