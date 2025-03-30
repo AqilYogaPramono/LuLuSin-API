@@ -1,12 +1,15 @@
-const {db} = require('../config/database/connection')
+const { db } = require('../config/database/connection');
 
 class adminModel {
-    static async getAdmin(){
+    static async login(email) {
         try {
-            const [rows, metadata] = await db.query("SELECT * FROM admins")
-            return rows;
+            const [rows] = await db.query("select * from admins where email = ?", {replacements: [email]})
+            if (rows.length == 0 ) {
+                return null
+            }
+            return rows[0]
         } catch (err) {
-            throw err;
+            throw err
         }
     }
 

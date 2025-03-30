@@ -1,4 +1,4 @@
-const connection = require('../config/database')
+const { db } = require('../config/database/connection');
 
 class questionModel {
 

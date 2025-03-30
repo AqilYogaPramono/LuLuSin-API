@@ -1,13 +1,13 @@
 const {DataTypes} = require(`sequelize`)
 const {db} = require(`../connection`)
 
-const tryoutSubjectScoreTable = db.define(`tryout_subject_score`,{
-    tryout_subject_score_id:{
+const tryoutScoreTable = db.define(`tryout_score`,{
+    tryout_score_id:{
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    id_student_answer: DataTypes.INTEGER,
+    id_tryout_subject_score: DataTypes.INTEGER,
     average_score: DataTypes.INTEGER,
     total_correct: DataTypes.INTEGER,
     total_wrong: DataTypes.INTEGER,
@@ -16,4 +16,4 @@ const tryoutSubjectScoreTable = db.define(`tryout_subject_score`,{
     timestamps: false
 })
 
-module.exports = tryoutSubjectScoreTable
+module.exports = tryoutScoreTable

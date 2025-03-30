@@ -1,17 +1,16 @@
 const {DataTypes} = require('sequelize')
 const {db} = require('../connection')
 
-const subjectTable = db.define('subject', {
-    subject_id: {
+const answerOptionTable = db.define('answer_option', {
+    answer_option_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    id_subject_category: DataTypes.INTEGER,
-    subject_name: DataTypes.STRING,
-    time_limit: DataTypes.TIME
+    id_question: DataTypes.INTEGER,
+    answer_option: DataTypes.TEXT
 }, {
     timestamps: false
 })
 
-module.exports = subjectTable
+module.exports = answerOptionTable
