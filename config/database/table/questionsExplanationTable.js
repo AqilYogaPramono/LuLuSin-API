@@ -9,6 +9,8 @@ const questionsExplanation = db.define('questions_explanation', {
     }, 
     id_answer_option: DataTypes.INTEGER,
     question_explanation: DataTypes.TEXT
+}, {
+    timestamps: false
 })
 
 module.exports = questionsExplanation

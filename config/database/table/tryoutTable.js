@@ -14,6 +14,8 @@ const tryoutTable = db.define('tryout', {
     }
 }, {
     timestamps: false
+}, {
+    timestamps: false
 })
 
 

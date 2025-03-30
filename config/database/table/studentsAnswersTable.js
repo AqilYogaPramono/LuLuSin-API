@@ -10,6 +10,8 @@ const studentsAnswerTable = db.define(`students_answer`,{
     id_student: DataTypes.INTEGER,
     answer_options_id: DataTypes.INTEGER,
     id_answer_choise: DataTypes.INTEGER
+}, {
+    timestamps: false
 })
 
 module.exports = studentsAnswerTable

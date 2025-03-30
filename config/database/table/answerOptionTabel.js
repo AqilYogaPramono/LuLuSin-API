@@ -9,6 +9,8 @@ const answerOptionTable = db.define('answer_option', {
     },
     id_question: DataTypes.INTEGER,
     answer_option: DataTypes.TEXT
+}, {
+    timestamps: false
 })
 
 module.exports = answerOptionTable
