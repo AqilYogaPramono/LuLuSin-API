@@ -1,5 +1,5 @@
-var express = require('express');
-var router = express.Router();
+var express = require('express')
+var router = express.Router()
 const subject = require('../../models/subjectModel')
 
 //get tabel subjek
@@ -40,5 +40,15 @@ router.patch('/teacher/subject/update/:id', async (req, res, next) => {
 })
 
 // delete subjek
+router.delete('/teacher/subject/delete/:id', async (req, res, next) => {
+    let id = req.params.id
 
-module.exports = router;
+    try {
+        await subject.delete(id)
+        res.status(200).json({ message: 'OK' })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+module.exports = router
