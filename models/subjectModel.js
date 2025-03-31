@@ -9,6 +9,15 @@ class subjectModel {
             throw err
         }
     }
+
+    static async store(data) {
+        try {
+            const [result] = await db.query("insert into subjects set subject_name = ?", {replacements: [data.subject_name]})
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = subjectModel
