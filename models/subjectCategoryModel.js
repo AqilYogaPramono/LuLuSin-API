@@ -18,6 +18,15 @@ class subjectCategoryModel {
             throw err
         }
     }
+
+    static async update(id, data) {
+        try {
+            const [result] = await db.query("update subject_categories set subject_category_name = ? where subject_category_id = ?", {replacements: [data.subject_category_name, id]})
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = subjectCategoryModel
