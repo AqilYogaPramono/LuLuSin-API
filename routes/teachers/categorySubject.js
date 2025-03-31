@@ -26,7 +26,18 @@ router.post('/teacher/subjectcategory/create', async (req, res, next) => {
 })
 
 // patch ketegori subjek
+router.patch('/teacher/subjectcategory/update/:id', async (req, res, next) => {
+    let id = req.params.id
+    let { subject_category_name } = req.body
+    let data = { subject_category_name }
 
+    try {
+        await subjectcategory.update(id, data)
+        res.status(200).json ({ message: 'OK'})
+    } catch (error) {
+        res.status(500).json ({ message: error.message})
+    }
+})
 
 // delete kategori subjek
 
