@@ -13,7 +13,17 @@ router.get('/teacher/subject', async (req, res, next) => {
 })
 
 //post ketgori subjek dan subjek
+router.post('/teacher/subject/create', async (req, res, next) => {
+    let { subject_name } = req.body
+    let data = { subject_name }
 
+    try {
+        await subject.store(data)
+        res.status(201).json ({ message: 'CREATED'})
+    } catch (error) {
+        res.status(500).json ({ message: error.message })
+    }
+})
 
 //patch ketegori subjek dan subjek
 
