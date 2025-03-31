@@ -14,19 +14,30 @@ router.get('/teacher/subject', async (req, res, next) => {
 
 //post ketgori subjek dan subjek
 router.post('/teacher/subject/create', async (req, res, next) => {
-    let { subject_name } = req.body
-    let data = { subject_name }
+    let { id_subject_category, subject_name, time_limit } = req.body
+    let data = { id_subject_category, subject_name, time_limit }
 
     try {
         await subject.store(data)
-        res.status(201).json ({ message: 'CREATED'})
+        res.status(201).json({ message: 'CREATED' })
     } catch (error) {
-        res.status(500).json ({ message: error.message })
+        res.status(500).json({ message: error.message })
     }
 })
 
 //patch ketegori subjek dan subjek
+router.patch('/teacher/subject/update/:id', async (req, res, next) => {
+    let id = req.params.id
+    let { id_subject_category, subject_name, time_limit } = req.body
+    let data = { id_subject_category, subject_name, time_limit }
 
+    try {
+        await subject.update(id, data)
+        res.status(200).json({ message: 'OK' })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
 
 // delete subjek
 
