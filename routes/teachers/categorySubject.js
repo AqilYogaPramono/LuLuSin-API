@@ -12,9 +12,18 @@ router.get('/teacher/subjectcategory', async (req, res, next) => {
     }
 })
 
+// post kategori subjek
+router.post('/teacher/subjectcategory/create', async (req, res, next) => {
+    let { subject_category_name } = req.body
+    let data = { subject_category_name }
 
-// post kategorui subjek
-
+    try {
+        await subjectcategory.store(data)
+        res.status(201).json ({ message: 'CREATED'})
+    } catch (error) {
+        res.status(500).json ({ message: error.message })
+    }
+})
 
 // patch ketegori subjek
 

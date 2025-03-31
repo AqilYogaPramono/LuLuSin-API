@@ -10,6 +10,14 @@ class subjectCategoryModel {
         }
     }
     
+    static async store(data) {
+        try {
+            const [result] = await db.query("insert into subject_categories set subject_category_name = ?", {replacements: [data.subject_category_name]})
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = subjectCategoryModel
