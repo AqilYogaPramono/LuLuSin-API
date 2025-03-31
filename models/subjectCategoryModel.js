@@ -27,6 +27,15 @@ class subjectCategoryModel {
             throw err
         }
     }
+
+    static async delete(id) {
+        try {
+            const [result] = await db.query("delete from subject_categories where subject_category_id = ?", {replacements: [id]})
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = subjectCategoryModel
