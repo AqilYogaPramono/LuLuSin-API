@@ -27,7 +27,7 @@ var adminteacherRouter = require('./routes/admin/teacher');
 //folder teacher
 // var teacherDashboardRouter = require('./routes/teachers/dashboard')
 var teacherCategorySubjectRouter = require('./routes/teachers/categorySubject')
-// var teacherSubjectRouter = require('./routes/teachers/subject')
+var teacherSubjectRouter = require('./routes/teachers/subject')
 var teachertryoutRouter = require('./routes/teachers/tryout')
 
 var app = express();
@@ -55,7 +55,7 @@ app.use('/API', adminteacherRouter)
 //folder teacher
 // app.use('/API', teacherDashboardRouter)
 app.use('/API', teacherCategorySubjectRouter)
-// app.use('/API', teacherSubjectRouter)
+app.use('/API', teacherSubjectRouter)
 app.use('/API', teachertryoutRouter)
 
 app.listen(port, () => {
