@@ -12,12 +12,21 @@ class subjectModel {
 
     static async store(data) {
         try {
-            const [result] = await db.query("insert into subjects set subject_name = ?", {replacements: [data.subject_name]})
+            const [result] = await db.query("insert into subjects set id_subject_category = ?, subject_name = ?, time_limit = ?", { replacements: [data.id_subject_category, data.subject_name, data.time_limit] })
             return result
         } catch (err) {
             throw err
         }
-    }
+    }   
+
+    static async update(id, data) {
+        try {
+            const [result] = await db.query("update subjects set id_subject_category = ?, subject_name = ?, time_limit = ? where subject_id = ?", { replacements: [data.id_subject_category, data.subject_name, data.time_limit, id] })
+            return result
+        } catch (err) {
+            throw err
+        }
+    }    
 }
 
 module.exports = subjectModel
