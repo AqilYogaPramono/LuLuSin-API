@@ -40,6 +40,14 @@ router.patch('/teacher/subjectcategory/update/:id', async (req, res, next) => {
 })
 
 // delete kategori subjek
-
+router.delete('/teacher/subjectcategory/delete/:id', async (req, res, next) => {
+    let id = req.params.id
+    try {
+        await subjectcategory.delete(id)
+        res.status(200).json ({ message: 'OK'})
+    } catch (error) {
+        res.status(500).json ({ message: error.message})
+    }
+})
 
 module.exports = router;
