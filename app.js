@@ -20,8 +20,8 @@ var adminDashboard = require('./routes/admin/dashboard')
 var adminStudentRouter = require('./routes/admin/student')
 var adminteacherRouter = require('./routes/admin/teacher');
 
-// //folder student
-// var studentDashboardRouter = require('./routes/students/dashboard')
+//folder student
+var studentDashboardRouter = require('./routes/students/dashboard')
 // var studentTryoutRouter = require('./routes/students/tryout')
 
 //folder teacher
@@ -48,8 +48,8 @@ app.use('/API', adminDashboard)
 app.use('/API', adminStudentRouter)
 app.use('/API', adminteacherRouter)
 
-// //folder student
-// app.use('/API', studentDashboardRouter)
+//folder student
+app.use('/API', studentDashboardRouter)
 // app.use('/API', studentTryoutRouter)
 
 //folder teacher
