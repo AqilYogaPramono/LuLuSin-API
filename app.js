@@ -26,7 +26,7 @@ var adminteacherRouter = require('./routes/admin/teacher');
 
 //folder teacher
 var teacherDashboardRouter = require('./routes/teachers/dashboard')
-var teacherCategorySubjectRouter = require('./routes/teachers/categorySubject')
+var teacherCategorySubjectRouter = require('./routes/teachers/subjectCategory')
 var teacherSubjectRouter = require('./routes/teachers/subject')
 var teachertryoutRouter = require('./routes/teachers/tryout')
 
