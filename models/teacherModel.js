@@ -12,6 +12,15 @@ class teacherModel {
             throw err
         }
     }
+
+    static async getUsername(teacherId) {
+        try {
+            const [rows] = await db.query("select teacher_name from teachers where teacher_id = ?", {replacements: [teacherId]})
+            return rows
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = teacherModel;
