@@ -12,6 +12,16 @@ class studentModel {
             throw err
         }
     }
+
+    static async register(data) {
+        try {
+            const [result] = await db.query("insert into students set NISN = ?, student_name = ?, email = ?, password = ?", { replacements: [data.NISN, data.student_name, data.email, data.password] })
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
+    
 }
 
 module.exports = studentModel

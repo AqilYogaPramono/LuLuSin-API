@@ -12,7 +12,7 @@ var { teacher, admin, information, subjectcategory, tryout, tryoutScore, student
 var indexRouter = require('./routes/index');
 
 //folder auth
-// var authRegisterRouter = require('./routes/auth/register')
+var authRegisterRouter = require('./routes/auth/register')
 var authLoginRouter = require('./routes/auth/login')
 
 // //folder 
@@ -40,7 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/API', indexRouter);
 
 //folder auth
-// app.use('/API', authRegisterRouter)
+app.use('/API', authRegisterRouter)
 app.use('/API', authLoginRouter)
 
 // //folder admin
