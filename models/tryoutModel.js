@@ -40,14 +40,21 @@ class tryoutModel {
     static async dashboard() { 
         try {
             const [rows] = await db.query(
-                `select t.tryout_name, (select count(*) from questions q where q.id_tryout = t.tryout_id) as total_questions from tryouts t where t.status = 'hide'`)
+                "select t.tryout_name, (select count(*) from questions q where q.id_tryout = t.tryout_id) as total_questions from tryouts t where t.status = 'hide'")
             return rows
         } catch (err) {
             throw err
         }
     }
     
-    
+    static async UnattemptedTryouts(studenId) {
+        try {
+            const [rows] = await db.query("select t.tryout_name from tryouts t where t.tryout_id not in(select distinct q.id_tryout from questions q join students_answers sa on sa.id_answer_option = q.question_id where sa.id_student = ? ) and t.status = 'show'", {replacements: [studenId]})
+            return rows
+        } catch (err) {
+            throw err
+        }
+    }
     
 }
 
