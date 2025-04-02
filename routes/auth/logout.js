@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-//post untuk melakuakn register siswa
+//post untuk melakukan logout
 router.post('/logout', async (req, res, next) => {
     try {
         

@@ -13,6 +13,15 @@ class studentModel {
         }
     }
 
+    static async getByNISN(nisn) {
+        try {
+            const [rows] = await db.query("select * from students where NISN = ?", { replacements: [nisn] })
+            return rows.length === 0 ? null : rows[0]
+        } catch (err) {
+            throw err
+        }
+    }
+
     static async register(data) {
         try {
             const [result] = await db.query("insert into students set NISN = ?, student_name = ?, email = ?, password = ?", { replacements: [data.NISN, data.student_name, data.email, data.password] })
