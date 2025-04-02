@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
-const tryout = require('../../models/tryoutModel')
+const tryout = require('../../models/tryoutModel');
+const tryoutModel = require('../../models/tryoutModel');
 
 //menampilakn judul tryout, soal yang sudah dibuat dan status
 router.get('/teacher/tryout', async (req, res, next) => {
@@ -54,13 +55,26 @@ router.delete('/teacher/tryout/delete/:id', async (req, res, next) => {
 
 //menampilkan kategori subjek beserta nama subejek dan soal yang sudah di buat
 router.get('/teacher/tryout/:id', async (req, res, next) => {
+    let tryoutId = req.params.id
     try {
-        let tryoutId = req.params.id
         let tryoutData = await tryout.getTryoutQuestionById(tryoutId)
 
         res.status(200).json ({ tryoutData })
     } catch (error) {
         res.status(500).json ({ message: error.message })
+    }
+})
+
+router.patch('/teacher/tryout/:id/update_status', async (req,res,next) => {
+    let { status } = req.body
+    let data = { status }
+    let tryoutId = req.params.id
+
+    try {
+        await tryout.updateStatus(data, tryoutId)
+        res.status(200).json ({ message: 'OK' })
+    } catch (error) {
+        res.status(500).json ({ message: error.message})
     }
 })
 
