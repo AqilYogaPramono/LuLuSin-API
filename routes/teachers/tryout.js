@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 const tryout = require('../../models/tryoutModel');
-const tryoutModel = require('../../models/tryoutModel');
 
 //menampilakn judul tryout, soal yang sudah dibuat dan status
 router.get('/teacher/tryout', async (req, res, next) => {
@@ -59,7 +58,7 @@ router.get('/teacher/tryout/:id', async (req, res, next) => {
     try {
         let tryoutData = await tryout.getTryoutQuestionById(tryoutId)
 
-        res.status(200).json ({ tryoutData })
+        res.status(200).json ( tryoutData )
     } catch (error) {
         res.status(500).json ({ message: error.message })
     }
