@@ -58,8 +58,8 @@ class tryoutModel {
     
     static async getTryoutQuestionById(tryoutId) {
         try {
-            const [rows] = await db.query("select sc.subject_category_name, s.subject_id, s.subject_name, count(q.question_id) as question_count from questions q join subjects s on q.id_subject = s.subject_id join subject_categories sc on s.id_subject_category = sc.subject_category_id where q.id_tryout = ? group by sc.subject_category_name, s.subject_id, s.subject_name;", {replacements: [tryoutId]})
-            return rows
+            const [rows] = await db.query("select json_object('tryout_title', t.tryout_name, 'sections', (select json_arrayagg(json_object('section_title', sc.subject_category_name, 'items', (select json_arrayagg(json_object('subject_id', subj.subject_id, 'name', subj.subject_name, 'soal_dibuat', subj.jumlah_soal)) from (select s.subject_id, s.subject_name, count(q.question_id) as jumlah_soal from subjects s left join questions q on q.id_subject = s.subject_id and q.id_tryout = t.tryout_id where s.id_subject_category = sc.subject_category_id group by s.subject_id, s.subject_name) as subj))) from subject_categories sc)) as result from tryouts t where t.tryout_id = ? and t.status = 'show'", {replacements: [tryoutId]})
+            return rows[0]
         } catch (err) {
             throw err
         }
