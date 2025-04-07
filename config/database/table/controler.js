@@ -30,8 +30,8 @@ questionsExplanation.belongsTo(answeroption, {foreignKey: 'id_answer_option', on
 student.hasMany(studentsanswer, {foreignKey: 'id_student', onDelete: 'CASCADE', hooks: true})
 studentsanswer.belongsTo(student, {foreignKey: 'id_student', onDelete: 'CASCADE', hooks: true})
 
-answeroption.hasMany(studentsanswer, {foreignKey: 'answer_option_id', onDelete: 'CASCADE', hooks: true})
-studentsanswer.belongsTo(answeroption, {foreignKey: 'answer_option_id', onDelete: 'CASCADE', hooks: true})
+answeroption.hasMany(studentsanswer, {foreignKey: 'answer_options_id', onDelete: 'CASCADE', hooks: true})
+studentsanswer.belongsTo(answeroption, {foreignKey: 'answer_options_id', onDelete: 'CASCADE', hooks: true})
 
 questionsExplanation.hasMany(studentsanswer, {foreignKey: 'id_answer_option', onDelete: 'CASCADE', hooks: true})
 studentsanswer.belongsTo(questionsExplanation, {foreignKey: 'id_answer_option', onDelete: 'CASCADE', hooks: true})
