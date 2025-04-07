@@ -78,6 +78,18 @@ router.patch('/teacher/tryout/:id/update_status', async (req,res,next) => {
 })
 
 //get soal, opsi jawaban, jawaban benar, pembahasan
+router.get('/teacher/tryout/:idTryout/:idSubject', async (req, res, next) => {
+    let tryoutId = req.params.idTryout
+    let subjectId = req.params.idSubject
+
+    try {
+        let tryoutQuestionBySubject = await tryout.getAllTryoutQuestionBySubject(tryoutId, subjectId)
+        res.status(200).json({ tryoutQuestionBySubject })
+    } catch (error) {
+        res.status(500).json ({ message: error.message })
+    }
+})
+
 //post soal dan opsi soal
 //post jawaban benar dan pembahasan 
 //patch soal dan opsi soal

@@ -58,7 +58,7 @@ class tryoutModel {
     
     static async getTryoutQuestionById(tryoutId) {
         try {
-            const [rows] = await db.query("select json_object('tryout_title', t.tryout_name, 'sections', (select json_arrayagg(json_object('section_title', sc.subject_category_name, 'items', (select json_arrayagg(json_object('subject_id', subj.subject_id, 'name', subj.subject_name, 'soal_dibuat', subj.jumlah_soal)) from (select s.subject_id, s.subject_name, count(q.question_id) as jumlah_soal from subjects s left join questions q on q.id_subject = s.subject_id and q.id_tryout = t.tryout_id where s.id_subject_category = sc.subject_category_id group by s.subject_id, s.subject_name) as subj))) from subject_categories sc)) as result from tryouts t where t.tryout_id = ? and t.status = 'show'", {replacements: [tryoutId]})
+            const [rows] = await db.query("SELECT JSON_OBJECT('tryout_title', t.tryout_name, 'sections', (SELECT JSON_ARRAYAGG(JSON_OBJECT('section_title', sc.subject_category_name, 'items', (SELECT JSON_ARRAYAGG(JSON_OBJECT('name', subj.subject_name, 'soal_dibuat', subj.jumlah_soal)) FROM (SELECT s.subject_name, COUNT(q.question_id) AS jumlah_soal FROM subjects s LEFT JOIN questions q ON q.id_subject = s.subject_id AND q.id_tryout = t.tryout_id WHERE s.id_subject_category = sc.subject_category_id GROUP BY s.subject_name) AS subj))) FROM subject_categories sc)) AS result FROM tryouts t WHERE t.tryout_id = ?;", {replacements: [tryoutId]})
             return rows[0]
         } catch (err) {
             throw err
@@ -69,6 +69,15 @@ class tryoutModel {
         try {
             const [result] = await db.query("update tryouts set status = ? where tryout_id = ?", {replacements: [data.status, tryoutId]})
             return result
+        } catch (err) {
+            throw err
+        }
+    }
+
+    static async getAllTryoutQuestionBySubject(tryoutId, subjectId) {
+        try {
+            const [rows] = await db.query("SELECT q.question_id AS id_question, q.question AS question, q.question_image AS question_image, JSON_ARRAYAGG(JSON_OBJECT('answer_option', ao.answer_option)) AS answer_options, MAX(CASE WHEN qe.question_explanation IS NOT NULL THEN ao.answer_option ELSE NULL END) AS correct_answer, MAX(qe.question_explanation) AS explanation, q.score AS score FROM questions q JOIN answer_options ao ON q.question_id = ao.id_question LEFT JOIN questions_explanations qe ON ao.answer_option_id = qe.id_answer_option WHERE q.id_tryout = ? AND q.id_subject = ? GROUP BY q.question_id, q.question, q.question_image, q.score", {replacements: [tryoutId, subjectId]})
+            return rows
         } catch (err) {
             throw err
         }
