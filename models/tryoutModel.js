@@ -74,6 +74,15 @@ class tryoutModel {
         }
     }
 
+    static async getSubjectByIdSubject(subjectId) {
+        try {
+            const [rows] = await db.query("select subject_name from subjects where subject_id = ?", {replacements: [subjectId]})
+            return rows
+        } catch (err) {
+            throw err
+        }
+    }
+
     static async getAllTryoutQuestionBySubject(tryoutId, subjectId) {
         try {
             const [rows] = await db.query("SELECT q.question_id AS id_question, q.question AS question, q.question_image AS question_image, JSON_ARRAYAGG(JSON_OBJECT('answer_option', ao.answer_option)) AS answer_options, MAX(CASE WHEN qe.question_explanation IS NOT NULL THEN ao.answer_option ELSE NULL END) AS correct_answer, MAX(qe.question_explanation) AS explanation, q.score AS score FROM questions q JOIN answer_options ao ON q.question_id = ao.id_question LEFT JOIN questions_explanations qe ON ao.answer_option_id = qe.id_answer_option WHERE q.id_tryout = ? AND q.id_subject = ? GROUP BY q.question_id, q.question, q.question_image, q.score", {replacements: [tryoutId, subjectId]})
