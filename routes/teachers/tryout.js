@@ -92,6 +92,7 @@ router.get('/teacher/tryout/:idTryout/:idSubject', async (req, res, next) => {
 })
 
 //post soal dan opsi soal
+//error
 //post jawaban benar dan pembahasan 
 //patch soal dan opsi soal
 //patch jawaban benar dan pembahasan
