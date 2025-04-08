@@ -58,7 +58,7 @@ class tryoutModel {
     
     static async getTryoutQuestionById(tryoutId) {
         try {
-            const [rows] = await db.query("SELECT JSON_OBJECT('tryout_title', t.tryout_name, 'sections', (SELECT JSON_ARRAYAGG(JSON_OBJECT('section_title', sc.subject_category_name, 'items', (SELECT JSON_ARRAYAGG(JSON_OBJECT('name', subj.subject_name, 'soal_dibuat', subj.jumlah_soal)) FROM (SELECT s.subject_name, COUNT(q.question_id) AS jumlah_soal FROM subjects s LEFT JOIN questions q ON q.id_subject = s.subject_id AND q.id_tryout = t.tryout_id WHERE s.id_subject_category = sc.subject_category_id GROUP BY s.subject_name) AS subj))) FROM subject_categories sc)) AS result FROM tryouts t WHERE t.tryout_id = ?;", {replacements: [tryoutId]})
+            const [rows] = await db.query("SELECT JSON_OBJECT('tryout_name', t.tryout_name, 'subject_categories', (SELECT JSON_ARRAYAGG(JSON_OBJECT('subject_category', sc.subject_category_name, 'items', (SELECT JSON_ARRAYAGG(JSON_OBJECT('id_subject', subj.subject_id, 'subject_name', subj.subject_name, 'soal_dibuat', subj.jumlah_soal)) FROM (SELECT s.subject_id, s.subject_name, COUNT(q.question_id) AS jumlah_soal FROM subjects s LEFT JOIN questions q ON q.id_subject = s.subject_id AND q.id_tryout = t.tryout_id WHERE s.id_subject_category = sc.subject_category_id GROUP BY s.subject_id, s.subject_name) AS subj))) FROM subject_categories sc)) AS result FROM tryouts t WHERE t.tryout_id = ?;", {replacements: [tryoutId]})
             return rows[0]
         } catch (err) {
             throw err
