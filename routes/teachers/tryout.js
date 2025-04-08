@@ -84,10 +84,11 @@ router.get('/teacher/tryout/:idTryout/:idSubject', async (req, res, next) => {
 
     try {
         let tryoutQuestionBySubject = await tryout.getAllTryoutQuestionBySubject(tryoutId, subjectId)
-        res.status(200).json({ tryoutQuestionBySubject })
+        let subject = await tryout.getSubjectByIdSubject(subjectId)
+        res.status(200).json({ subject, tryoutQuestionBySubject })
     } catch (error) {
-        res.status(500).json ({ message: error.message })
-    }
+        res.status(500).json ({ message: error.message })
+    }
 })
 
 //post soal dan opsi soal
