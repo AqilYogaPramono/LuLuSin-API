@@ -3,12 +3,12 @@ const { db } = require('../config/database/connection');
 class subjectModel {
     static async getall() {
         try {
-            const [rows] = await db.query("select * from subjects")
+            const [rows] = await db.query("select s.*, sc.subject_category_name from subjects s left join subject_categories sc on s.id_subject_category = sc.subject_category_id")
             return rows
-        } catch (err) {
+        } catch (err){
             throw err
         }
-    }
+    } 
 
     static async store(data) {
         try {
