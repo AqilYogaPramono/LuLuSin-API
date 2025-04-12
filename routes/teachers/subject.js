@@ -14,7 +14,7 @@ router.get('/teacher/subject', verifyToken, authorize(['teacher']), async (req, 
 })
 
 //post ketgori subjek dan subjek
-router.post('/teacher/subject/create', async (req, res, next) => {
+router.post('/teacher/subject/create', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { id_subject_category, subject_name, time_limit, minimal_questions } = req.body
     let data = { id_subject_category, subject_name, time_limit, minimal_questions }
 
