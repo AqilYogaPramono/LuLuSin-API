@@ -29,8 +29,8 @@ router.post('/teacher/subject/create', verifyToken, authorize(['teacher']), asyn
 //patch ketegori subjek dan subjek
 router.patch('/teacher/subject/update/:id', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let id = req.params.id
-    let { id_subject_category, subject_name, time_limit } = req.body
-    let data = { id_subject_category, subject_name, time_limit }
+    let { id_subject_category, subject_name, time_limit, minimal_questions } = req.body
+    let data = { id_subject_category, subject_name, time_limit, minimal_questions }
 
     try {
         await subject.update(id, data)

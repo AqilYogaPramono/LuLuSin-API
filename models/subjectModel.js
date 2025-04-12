@@ -21,7 +21,7 @@ class subjectModel {
 
     static async update(id, data) {
         try {
-            const [result] = await db.query("update subjects set id_subject_category = ?, subject_name = ?, time_limit = ? where subject_id = ?", { replacements: [data.id_subject_category, data.subject_name, data.time_limit, id] })
+            const [result] = await db.query("update subjects set id_subject_category = ?, subject_name = ?, time_limit = ?, minimal_questions = ? where subject_id = ?", { replacements: [data.id_subject_category, data.subject_name, data.time_limit, data.minimal_questions, id] })
             return result
         } catch (err) {
             throw err
