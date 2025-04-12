@@ -2,12 +2,16 @@ var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var dotenv = require('dotenv')
+const session = require('express-session');
+const cors = require('cors')
 dotenv.config()
 const port = process.env.PORT
 
 const { db, connectDB } = require('./config/database/connection');
 
 var { teacher, admin, information, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation} = require('./config/database/table/controler')
+
+var app = express();
 
 var indexRouter = require('./routes/index');
 
@@ -30,8 +34,16 @@ var teacherCategorySubjectRouter = require('./routes/teachers/subjectCategory')
 var teacherSubjectRouter = require('./routes/teachers/subject')
 var teachertryoutRouter = require('./routes/teachers/tryout')
 
-var app = express();
+app.use(
+    session({
+        secret: 'LuLusin',
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: false }
+    })
+);
 
+app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

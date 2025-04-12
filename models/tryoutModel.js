@@ -1,4 +1,6 @@
 const { db } = require('../config/database/connection');
+const { Sequelize, QueryTypes } = require('sequelize');
+
 
 class tryoutModel {
     static async getall() {
@@ -92,37 +94,75 @@ class tryoutModel {
         }
     }
 
-    static async storeQuestion(data) {
-        try {
-            const { tryout_id, subject_id, question, question_image, score, answer_options } = data
+    static async storeQuestionWithExplanation(data) {
+      const { tryout_id, subject_id, question, question_image,score, answer_options, correct_answer_index, question_explanation} = data
 
-            const [result] = await db.query("INSERT INTO questions (id_tryout, id_subject, question, question_image, score) VALUES (:tryout_id, :subject_id, :question, :question_image, :score)", {replacements: {tryout_id, subject_id, question, question_image, score}})
+      if (answer_options.length > 5) {
+        throw new Error("Maksimal 5 opsi jawaban yang diperbolehkan")
+      }
 
-            let questionId = result.insertId
-            
-            if (typeof questionId === "undefined" || questionId === 0) {
-                const [rows] = await db.query("SELECT LAST_INSERT_ID() as questionId");
-                if (rows && rows.length > 0 && rows[0].questionId) {
-                    questionId = rows[0].questionId;
-                }
-            }
+      const filledAnswerOptions = answer_options.concat(
+        Array(5 - answer_options.length).fill("")
+      )
 
-            if (answer_options > 5 ) {
-                throw new Error("Maksimal 5 opsi jawaban yang diperbolehkan")
-            }
+      if (
+        typeof correct_answer_index !== "number" ||
+        correct_answer_index < 0 ||
+        correct_answer_index >= filledAnswerOptions.length
+      ) {
+        throw new Error("Indeks jawaban benar tidak valid")
+      }
 
-            const filledAnswerOptions = answer_options.concat(Array(5 - answer_options.length).fill(""));
+      const transaction = await db.transaction();
 
-            for (const option of filledAnswerOptions) {
-                const value = typeof option !== "undefined" ? option : ""
-                await db.query("INSERT INTO answer_options (id_question, answer_option) VALUES (:questionId, :option)", { replacements: {questionId, option: value}})
-            }
+      try {
+        const [questionId] = await db.query("INSERT INTO questions (id_tryout, id_subject, question, question_image, score)  VALUES (:tryout_id, :subject_id, :question, :question_image, :score)", {
+          replacements: { tryout_id, subject_id, question, question_image, score },
+          transaction,
+          type: QueryTypes.INSERT
+        })
 
-            return { result }
-
-        } catch (err) {
-            throw err
+        if (!questionId) {
+          throw new Error("Gagal mendapatkan ID soal dari query insert.");
         }
+
+        const insertedOptionIds = []
+        for (const option of filledAnswerOptions) {
+          const value = option || ""
+          const [optionId] = await db.query("INSERT INTO answer_options (id_question, answer_option)  VALUES (:questionId, :option)", {
+            replacements: { questionId, option: value },
+            transaction,
+            type: QueryTypes.INSERT
+          })
+          if (!optionId) {
+            throw new Error(`Gagal memasukkan opsi jawaban: ${value}`)
+          }
+          insertedOptionIds.push(optionId)
+        }
+
+        if (!insertedOptionIds.length) {
+          throw new Error("Gagal memasukkan opsi jawaban ke tabel 'answer_options'.")
+        }
+
+        if (typeof insertedOptionIds[correct_answer_index] === "undefined") {
+          throw new Error("Indeks jawaban benar tidak valid; opsi jawaban tidak ditemukan.")
+        }
+
+        const correct_answer_option_id = insertedOptionIds[correct_answer_index]
+
+        await db.query("INSERT INTO questions_explanations (id_answer_option, question_explanation)  VALUES (:correct_answer_option_id, :question_explanation)", {
+          replacements: { correct_answer_option_id, question_explanation },
+          transaction,
+          type: QueryTypes.INSERT
+        })
+
+        await transaction.commit()
+
+        return { questionId, insertedOptionIds }
+      } catch (error) {
+        await transaction.rollback()
+        throw error
+      }
     }
 
 }

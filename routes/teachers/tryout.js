@@ -93,24 +93,62 @@ router.get('/teacher/tryout/:idTryout/:idSubject', async (req, res, next) => {
 
 //post soal dan opsi soal
 router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', uploudPhoto.single('question_image'), async (req, res, next) => {
-    let { tryout_id, subject_id } = req.params
-    let { question, score } = req.body
-    let answer_options = req.body.answer_options
-    let data = { tryout_id, subject_id, question, question_image: req.file ? req.file.filename : null, score, answer_options }
-    
+  try {
+    const { tryout_id, subject_id } = req.params
+    let { question, score, answer_options } = req.body
+
     if (!Array.isArray(answer_options)) {
-        answer_options = [answer_options]
+      answer_options = [answer_options]
     }
 
-    try {
-        await tryout.storeQuestion(data)
-        res.status(201).json({ message: 'CREATED' })
-    } catch (error) {
-        res.status(501).json({ message: error.message })
-    }
+    req.session.tempQuestionData = { question, score, answer_options, question_image: req.file ? req.file.filename : null }
+
+    res.status(201).json({ message: "CREATED" })
+  } catch (error) {
+    next(error)
+  }
 })
 
 //post jawaban benar dan pembahasan 
+router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_explanation', async (req, res, next) => {
+  const { tryout_id, subject_id } = req.params
+
+  let { correct_answer_index, question_explanation } = req.body
+
+  if (typeof correct_answer_index === "undefined") {
+    return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
+  }
+
+  correct_answer_index = parseInt(correct_answer_index, 10)
+
+  if (isNaN(correct_answer_index) || correct_answer_index < 0) {
+    return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
+  }
+
+  if (
+    typeof question_explanation === "undefined" ||
+    question_explanation.trim() === ""
+  ) {
+    return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." });
+  }
+
+  if (!req.session || !req.session.tempQuestionData) {
+    return res.status(400).json({ message: "Data soal sementara tidak ditemukan, mohon mulai dari awal." })
+  }
+
+  const tempData = req.session.tempQuestionData
+  const finalData = { tryout_id, subject_id, question: tempData.question, question_image: tempData.question_image, score: tempData.score, answer_options: tempData.answer_options, correct_answer_index, question_explanation: question_explanation.trim() };
+
+
+  try {
+    await tryout.storeQuestionWithExplanation(finalData)
+    req.session.tempQuestionData = null
+    res.status(201).json({ message: "CREATED" })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
 //patch soal dan opsi soal
 //patch jawaban benar dan pembahasan
 //delete soal by id
