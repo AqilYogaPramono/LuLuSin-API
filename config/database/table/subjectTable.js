@@ -9,7 +9,8 @@ const subjectTable = db.define('subject', {
     },
     id_subject_category: DataTypes.INTEGER,
     subject_name: DataTypes.STRING,
-    time_limit: DataTypes.TIME
+    time_limit: DataTypes.INTEGER,
+    minimal_questions: DataTypes.INTEGER
 }, {
     timestamps: false
 })
