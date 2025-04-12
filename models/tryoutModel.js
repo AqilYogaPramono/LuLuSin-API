@@ -80,8 +80,8 @@ class tryoutModel {
             return rows
         } catch (err) {
             throw err
-        }
-    }
+        }
+    }
 
     static async getAllTryoutQuestionBySubject(tryoutId, subjectId) {
         try {
@@ -91,6 +91,40 @@ class tryoutModel {
             throw err
         }
     }
+
+    static async storeQuestion(data) {
+        try {
+            const { tryout_id, subject_id, question, question_image, score, answer_options } = data
+
+            const [result] = await db.query("INSERT INTO questions (id_tryout, id_subject, question, question_image, score) VALUES (:tryout_id, :subject_id, :question, :question_image, :score)", {replacements: {tryout_id, subject_id, question, question_image, score}})
+
+            let questionId = result.insertId
+            
+            if (typeof questionId === "undefined" || questionId === 0) {
+                const [rows] = await db.query("SELECT LAST_INSERT_ID() as questionId");
+                if (rows && rows.length > 0 && rows[0].questionId) {
+                    questionId = rows[0].questionId;
+                }
+            }
+
+            if (answer_options > 5 ) {
+                throw new Error("Maksimal 5 opsi jawaban yang diperbolehkan")
+            }
+
+            const filledAnswerOptions = answer_options.concat(Array(5 - answer_options.length).fill(""));
+
+            for (const option of filledAnswerOptions) {
+                const value = typeof option !== "undefined" ? option : ""
+                await db.query("INSERT INTO answer_options (id_question, answer_option) VALUES (:questionId, :option)", { replacements: {questionId, option: value}})
+            }
+
+            return { result }
+
+        } catch (err) {
+            throw err
+        }
+    }
+
 }
 
 module.exports = tryoutModel
