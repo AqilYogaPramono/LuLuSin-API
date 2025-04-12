@@ -80,7 +80,7 @@ router.patch('/teacher/tryout/:id/update_status', verifyToken, authorize(['teach
 })
 
 //get soal, opsi jawaban, jawaban benar, pembahasan
-router.get('/teacher/tryout/:idTryout/:idSubject', verifyToken, authorize(['teacher']), async (req, res, next) => {
+router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { tryoutId, subjectId } = req.params
 
     try {
