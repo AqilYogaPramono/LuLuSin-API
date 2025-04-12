@@ -12,7 +12,7 @@ class subjectModel {
 
     static async store(data) {
         try {
-            const [result] = await db.query("insert into subjects set id_subject_category = ?, subject_name = ?, time_limit = ?", { replacements: [data.id_subject_category, data.subject_name, data.time_limit] })
+            const [result] = await db.query("insert into subjects set id_subject_category = ?, subject_name = ?, time_limit = ?, minimal_questions = ?", { replacements: [data.id_subject_category, data.subject_name, data.time_limit, data.minimal_questions] })
             return result
         } catch (err) {
             throw err
