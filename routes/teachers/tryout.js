@@ -2,9 +2,10 @@ var express = require('express');
 var router = express.Router();
 const tryout = require('../../models/tryoutModel');
 const uploudPhoto = require('../../config/middleware/uploudPhoto');
+const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
 //menampilakn judul tryout, soal yang sudah dibuat dan status
-router.get('/teacher/tryout', async (req, res, next) => {
+router.get('/teacher/tryout', verifyToken, authorize(['teacher']), async (req, res, next) => {
     try {
         let  dataTryout = await tryout.getall()
         
@@ -16,7 +17,7 @@ router.get('/teacher/tryout', async (req, res, next) => {
 })
 
 //post judl tryout
-router.post('/teacher/tryout/create', async (req, res, next) => {
+router.post('/teacher/tryout/create', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { tryout_name } = req.body
     let data = { tryout_name }
 
@@ -29,7 +30,7 @@ router.post('/teacher/tryout/create', async (req, res, next) => {
 })
 
 //edit judul tryout
-router.patch('/teacher/tryout/update/:id', async (req, res, next) => {
+router.patch('/teacher/tryout/update/:id', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let id = req.params.id
     let { tryout_name } = req.body
     let data = { tryout_name }
@@ -43,7 +44,7 @@ router.patch('/teacher/tryout/update/:id', async (req, res, next) => {
 })
 
 //delete tryout byid
-router.delete('/teacher/tryout/delete/:id', async (req, res, next) => {
+router.delete('/teacher/tryout/delete/:id', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let id = req.params.id
     try {
         await tryout.delete(id)
@@ -54,7 +55,7 @@ router.delete('/teacher/tryout/delete/:id', async (req, res, next) => {
 })
 
 //menampilkan kategori subjek beserta nama subejek dan soal yang sudah di buat
-router.get('/teacher/tryout/:id', async (req, res, next) => {
+router.get('/teacher/tryout/:id', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let tryoutId = req.params.id
     try {
         let tryoutData = await tryout.getTryoutQuestionById(tryoutId)
@@ -65,7 +66,7 @@ router.get('/teacher/tryout/:id', async (req, res, next) => {
     }
 })
 
-router.patch('/teacher/tryout/:id/update_status', async (req,res,next) => {
+router.patch('/teacher/tryout/:id/update_status', verifyToken, authorize(['teacher']), async (req,res,next) => {
     let { status } = req.body
     let data = { status }
     let tryoutId = req.params.id
@@ -79,7 +80,7 @@ router.patch('/teacher/tryout/:id/update_status', async (req,res,next) => {
 })
 
 //get soal, opsi jawaban, jawaban benar, pembahasan
-router.get('/teacher/tryout/:idTryout/:idSubject', async (req, res, next) => {
+router.get('/teacher/tryout/:idTryout/:idSubject', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { tryoutId, subjectId } = req.params
 
     try {
@@ -92,7 +93,7 @@ router.get('/teacher/tryout/:idTryout/:idSubject', async (req, res, next) => {
 })
 
 //post soal dan opsi soal
-router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', uploudPhoto.single('question_image'), async (req, res, next) => {
+router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToken, authorize(['teacher']), uploudPhoto.single('question_image'), async (req, res, next) => {
   try {
     const { tryout_id, subject_id } = req.params
     let { question, score, answer_options } = req.body
@@ -110,7 +111,7 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', uploudPhot
 })
 
 //post jawaban benar dan pembahasan 
-router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_explanation', async (req, res, next) => {
+router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_explanation', verifyToken, authorize(['teacher']), async (req, res, next) => {
   const { tryout_id, subject_id } = req.params
 
   let { correct_answer_index, question_explanation } = req.body

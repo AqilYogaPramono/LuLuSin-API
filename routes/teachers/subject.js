@@ -1,9 +1,10 @@
 var express = require('express')
 var router = express.Router()
 const subject = require('../../models/subjectModel')
+const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
 //get tabel subjek
-router.get('/teacher/subject', async (req, res, next) => {
+router.get('/teacher/subject', verifyToken, authorize(['teacher']), async (req, res, next) => {
     try {
         let datasubject = await subject.getall()
         res.status(200).json({ datasubject })
@@ -13,7 +14,7 @@ router.get('/teacher/subject', async (req, res, next) => {
 })
 
 //post ketgori subjek dan subjek
-router.post('/teacher/subject/create', async (req, res, next) => {
+router.post('/teacher/subject/create', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { id_subject_category, subject_name, time_limit } = req.body
     let data = { id_subject_category, subject_name, time_limit }
 
@@ -26,7 +27,7 @@ router.post('/teacher/subject/create', async (req, res, next) => {
 })
 
 //patch ketegori subjek dan subjek
-router.patch('/teacher/subject/update/:id', async (req, res, next) => {
+router.patch('/teacher/subject/update/:id', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let id = req.params.id
     let { id_subject_category, subject_name, time_limit } = req.body
     let data = { id_subject_category, subject_name, time_limit }
@@ -40,7 +41,7 @@ router.patch('/teacher/subject/update/:id', async (req, res, next) => {
 })
 
 // delete subjek
-router.delete('/teacher/subject/delete/:id', async (req, res, next) => {
+router.delete('/teacher/subject/delete/:id', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let id = req.params.id
 
     try {
