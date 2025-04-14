@@ -1,7 +1,8 @@
-var express = require('express');
-var router = express.Router();
-const tryout = require('../../models/tryoutModel');
-const uploudPhoto = require('../../config/middleware/uploudPhoto');
+var express = require('express')
+var router = express.Router()
+const tryout = require('../../models/tryoutModel')
+const uploudPhoto = require('../../config/middleware/uploudPhoto')
+const deleteQuestionImage = require('../../config/middleware/deleteQuestionImage')
 const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
 //menampilakn judul tryout, soal yang sudah dibuat dan status
@@ -130,7 +131,7 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_expla
     typeof question_explanation === "undefined" ||
     question_explanation.trim() === ""
   ) {
-    return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." });
+    return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." })
   }
 
   if (!req.session || !req.session.tempQuestionData) {
@@ -138,7 +139,7 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_expla
   }
 
   const tempData = req.session.tempQuestionData
-  const finalData = { tryout_id, subject_id, question: tempData.question, question_image: tempData.question_image, score: tempData.score, answer_options: tempData.answer_options, correct_answer_index, question_explanation: question_explanation.trim() };
+  const finalData = { tryout_id, subject_id, question: tempData.question, question_image: tempData.question_image, score: tempData.score, answer_options: tempData.answer_options, correct_answer_index, question_explanation: question_explanation.trim() }
 
 
   try {
@@ -150,8 +151,18 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_expla
   }
 })
 
-//patch soal dan opsi soal
-//patch jawaban benar dan pembahasan
-//delete soal by id
+//delete soal by id question
+router.delete('/teacher/tryout/:tryout_id/:subject_id/:question_id/delete', verifyToken, authorize(['teacher']), deleteQuestionImage, async (req, res) => {
+    try {
+      const { question_id, tryout_id, subject_id } = req.params;
 
-module.exports = router;
+      await tryout.deleteQuestionById(question_id, tryout_id, subject_id);
+
+      res.status(200).json({ message: 'Soal dan gambar berhasil dihapus' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+module.exports = router
