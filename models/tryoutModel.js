@@ -57,7 +57,15 @@ class tryoutModel {
         }
     }
     
-
+    static async dashboard() { 
+      try {
+          const [rows] = await db.query(
+              "SELECT t.tryout_id, t.tryout_name, (SELECT COUNT(*) FROM questions q WHERE q.id_tryout = t.tryout_id) AS total_questions, (SELECT SUM(minimal_questions) FROM subjects) AS total_minimal_questions FROM tryouts t WHERE t.status = 'hide'")
+          return rows
+      } catch (err) {
+          throw err
+      }
+  }
 
     static async updateStatus(data, tryoutId) {
         try {
