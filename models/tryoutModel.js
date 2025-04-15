@@ -168,10 +168,100 @@ class tryoutModel {
     static async deleteQuestionById(question_id, tryout_id, subject_id) {
       try {
         await db.query(`DELETE FROM questions  WHERE question_id = ? AND id_tryout = ? AND id_subject = ?`, { replacements: [question_id,tryout_id, subject_id]}
-      );
+      )
     } catch (error) {
       throw error}
     }
+
+    static async updateQuestionWithExplanation(questionId, data) {
+      const {tryout_id,subject_id,question,question_image,score,answer_options,correct_answer_index,question_explanation,} = data
+    
+      if (answer_options.length > 5) {
+        throw new Error("Maksimal 5 opsi jawaban yang diperbolehkan")
+      }
+    
+      const filledAnswerOptions = answer_options.concat(
+        Array(5 - answer_options.length).fill("")
+      )
+    
+      if (
+        typeof correct_answer_index !== "number" ||
+        correct_answer_index < 0 ||
+        correct_answer_index >= filledAnswerOptions.length
+      ) {
+        throw new Error("Indeks jawaban benar tidak valid")
+      }
+    
+      const transaction = await db.transaction()
+    
+      try {
+        await db.query(`UPDATE questions SET id_tryout = :tryout_id,id_subject = :subject_id,question = :question,question_image = :question_image,score = :score WHERE question_id = :questionId`,
+          {
+            replacements: { tryout_id, subject_id, question, question_image, score, questionId }, transaction,
+            type: QueryTypes.UPDATE,
+          }
+        )
+    
+        const [existingOptions] = await db.query(`SELECT answer_option_id FROM answer_options WHERE id_question = :questionId ORDER BY answer_option_id ASC`,
+          { replacements: { questionId }, transaction }
+        )
+    
+        if (!existingOptions || existingOptions.length !== 5) {
+          throw new Error("Jumlah opsi jawaban untuk soal tidak valid. Diharapkan 5 opsi jawaban.")
+        }
+    
+        const updatedOptionIds = []
+        for (let index = 0; index < filledAnswerOptions.length; index++) {
+          const value = filledAnswerOptions[index] || ""
+          const answer_option_id = existingOptions[index].answer_option_id
+    
+          await db.query(`UPDATE answer_options SET answer_option = :option WHERE answer_option_id = :answer_option_id`,
+            {
+              replacements: { option: value, answer_option_id },
+              transaction,
+              type: QueryTypes.UPDATE,
+            }
+          )
+          updatedOptionIds.push(answer_option_id)
+        }
+    
+        if (typeof updatedOptionIds[correct_answer_index] === "undefined") {
+          throw new Error("Indeks jawaban benar tidak valid, opsi jawaban tidak ditemukan.")
+        }
+    
+        const correct_answer_option_id = updatedOptionIds[correct_answer_index]
+    
+        const [explanationData] = await db.query(`SELECT questions_explanation_id FROM questions_explanations WHERE id_answer_option = :correct_answer_option_id`,
+          { replacements: { correct_answer_option_id }, transaction }
+        )
+    
+        if (explanationData && explanationData.length > 0) {
+          await db.query(`UPDATE questions_explanations SET question_explanation = :question_explanation WHERE id_answer_option = :correct_answer_option_id`,
+            {
+              replacements: { question_explanation, correct_answer_option_id },
+              transaction,
+              type: QueryTypes.UPDATE,
+            }
+          )
+        } else {
+          await db.query(`INSERT INTO questions_explanations (id_answer_option, question_explanation) VALUES (:correct_answer_option_id, :question_explanation)`,
+            {
+              replacements: { correct_answer_option_id, question_explanation },
+              transaction,
+              type: QueryTypes.INSERT,
+            }
+          )
+        }        
+    
+        await transaction.commit()
+        return { questionId, updatedOptionIds }
+      } catch (error) {
+        await transaction.rollback()
+        throw error
+      }
+    }
+    
+    
 }
 
 module.exports = tryoutModel
