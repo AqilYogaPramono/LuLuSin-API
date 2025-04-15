@@ -17,6 +17,10 @@ router.get('/teacher/subject', verifyToken, authorize(['teacher']), async (req, 
 router.post('/teacher/subject/create', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { id_subject_category, subject_name, time_limit, minimal_questions } = req.body
     let data = { id_subject_category, subject_name, time_limit, minimal_questions }
+    
+    if (!subject_name) return res.status(400).json({ message: 'subject_name is required.' })
+    if (!time_limit) return res.status(400).json({ message: 'time_limit is required.' })
+    if (!minimal_questions) return res.status(400).json({ message: 'minimal_questions is required.' })
 
     try {
         await subject.store(data)
@@ -31,6 +35,10 @@ router.patch('/teacher/subject/update/:id', verifyToken, authorize(['teacher']),
     let id = req.params.id
     let { id_subject_category, subject_name, time_limit, minimal_questions } = req.body
     let data = { id_subject_category, subject_name, time_limit, minimal_questions }
+
+    if (!subject_name) return res.status(400).json({ message: 'subject_name is required.' })
+    if (!time_limit) return res.status(400).json({ message: 'time_limit is required.' })
+    if (!minimal_questions) return res.status(400).json({ message: 'minimal_questions is required.' })
 
     try {
         await subject.update(id, data)

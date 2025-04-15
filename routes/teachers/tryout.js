@@ -157,6 +157,9 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id'
     try {
       const { tryout_id, subject_id, question_id } = req.params
       let { question, score, answer_options } = req.body
+      if (!question) return res.status(400).json({ message: 'question is required.' })
+      if (!score) return res.status(400).json({ message: 'score is required.' })
+      if (!answer_options) return res.status(400).json({ message: 'answer_options is required.' })
 
       if (!Array.isArray(answer_options)) {
         answer_options = [answer_options]
