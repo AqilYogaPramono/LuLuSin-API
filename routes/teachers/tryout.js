@@ -3,6 +3,7 @@ var router = express.Router()
 const tryout = require('../../models/tryoutModel')
 const uploudPhoto = require('../../config/middleware/uploudPhoto')
 const deleteQuestionImage = require('../../config/middleware/deleteQuestionImage')
+const deleteOldImageIfReplaced = require('../../config/middleware/deleteOldImageIfReplaced')
 const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
 //menampilakn judul tryout, soal yang sudah dibuat dan status
@@ -105,7 +106,7 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToke
 
     req.session.tempQuestionData = { question, score, answer_options, question_image: req.file ? req.file.filename : null }
 
-    res.status(201).json({ message: "CREATED" })
+    res.status(201).json({ message: "CREATED TO SESSION" })
   } catch (error) {
     next(error)
   }
@@ -145,24 +146,81 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_expla
   try {
     await tryout.storeQuestionWithExplanation(finalData)
     req.session.tempQuestionData = null
-    res.status(201).json({ message: "CREATED" })
+    res.status(201).json({ message: "OK" })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
 })
 
-//delete soal by id question
-router.delete('/teacher/tryout/:tryout_id/:subject_id/:question_id/delete', verifyToken, authorize(['teacher']), deleteQuestionImage, async (req, res) => {
+// patch question and answer options
+router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id',verifyToken,authorize(['teacher']),uploudPhoto.single('question_image'),deleteOldImageIfReplaced,async (req, res, next) => {
     try {
-      const { question_id, tryout_id, subject_id } = req.params;
+      const { tryout_id, subject_id, question_id } = req.params
+      let { question, score, answer_options } = req.body
 
-      await tryout.deleteQuestionById(question_id, tryout_id, subject_id);
+      if (!Array.isArray(answer_options)) {
+        answer_options = [answer_options]
+      }
 
-      res.status(200).json({ message: 'Soal dan gambar berhasil dihapus' });
+      const question_image = req.file ? req.file.filename : null
+
+      req.session.tempQuestionData = {question,score,answer_options,question_image}
+
+      res.status(200).json({ message: "CREATED TO SESSION" })
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      next(error)
     }
   }
-);
+)
+
+// patch answer explanation and correct answer
+router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id/edit_explanation',verifyToken,authorize(['teacher']),async (req, res, next) => {
+    const { tryout_id, subject_id, question_id } = req.params
+    let { correct_answer_index, question_explanation } = req.body
+
+    if (typeof correct_answer_index === "undefined") {
+      return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
+    }
+
+    correct_answer_index = parseInt(correct_answer_index, 10)
+    if (isNaN(correct_answer_index) || correct_answer_index < 0) {
+      return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
+    }
+
+    if (typeof question_explanation === "undefined" || question_explanation.trim() === "") {
+      return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." })
+    }
+
+    if (!req.session || !req.session.tempQuestionData) {
+      return res.status(400).json({ message: "Data soal sementara tidak ditemukan, mohon mulai dari awal." })
+    }
+
+    const tempData = req.session.tempQuestionData
+
+    const finalData = {tryout_id,subject_id,question: tempData.question,question_image: tempData.question_image,score: tempData.score,answer_options: tempData.answer_options,correct_answer_index,question_explanation: question_explanation.trim()}
+
+    try {
+      await tryout.updateQuestionWithExplanation(parseInt(question_id, 10), finalData)
+      req.session.tempQuestionData = null
+      res.status(200).json({ message: "OK" })
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+)
+
+//delete soal by id question
+router.delete('/teacher/tryout/:tryout_id/:subject_id/:question_id/delete', verifyToken, authorize(['teacher']), deleteQuestionImage, async (req, res) => {
+  try {
+    const { question_id, tryout_id, subject_id } = req.params
+
+    await tryout.deleteQuestionById(question_id, tryout_id, subject_id)
+
+    res.status(200).json({ message: 'OK' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+)
 
 module.exports = router
