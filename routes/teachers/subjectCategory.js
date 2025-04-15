@@ -18,6 +18,8 @@ router.post('/teacher/subjectcategory/create', verifyToken, authorize(['teacher'
     let { subject_category_name } = req.body
     let data = { subject_category_name }
 
+    if (!subject_category_name) return res.status(400).json({ message: 'subject_category_name is required.' })
+
     try {
         await subjectcategory.store(data)
         res.status(201).json ({ message: 'CREATED'})
@@ -31,6 +33,8 @@ router.patch('/teacher/subjectcategory/update/:id', verifyToken, authorize(['tea
     let id = req.params.id
     let { subject_category_name } = req.body
     let data = { subject_category_name }
+
+    if (!subject_category_name) return res.status(400).json({ message: 'subject_category_name is required.' })
 
     try {
         await subjectcategory.update(id, data)
