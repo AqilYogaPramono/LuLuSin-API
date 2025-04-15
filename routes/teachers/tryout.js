@@ -23,6 +23,8 @@ router.post('/teacher/tryout/create', verifyToken, authorize(['teacher']), async
     let { tryout_name } = req.body
     let data = { tryout_name }
 
+    if (!tryout_name) return res.status(400).json({ message: 'tryout_name is required.' })
+
     try {
         await tryout.store(data)
         res.status(201).json ({ message: 'CREATED'})
@@ -36,6 +38,8 @@ router.patch('/teacher/tryout/update/:id', verifyToken, authorize(['teacher']), 
     let id = req.params.id
     let { tryout_name } = req.body
     let data = { tryout_name }
+
+    if (!tryout_name) return res.status(400).json({ message: 'tryout_name is required.' })
 
     try {
         await tryout.update(id, data)
@@ -73,6 +77,8 @@ router.patch('/teacher/tryout/:id/update_status', verifyToken, authorize(['teach
     let data = { status }
     let tryoutId = req.params.id
 
+    if (!status) return res.status(400).json({ message: 'status is required.' })
+
     try {
         await tryout.updateStatus(data, tryoutId)
         res.status(200).json ({ message: 'OK' })
@@ -100,6 +106,9 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToke
     const { tryout_id, subject_id } = req.params
     let { question, score, answer_options } = req.body
 
+    if (!question) return res.status(400).json({ message: 'question is required.' })
+    if (!score) return res.status(400).json({ message: 'score is required.' })
+
     if (!Array.isArray(answer_options)) {
       answer_options = [answer_options]
     }
@@ -117,6 +126,8 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_expla
   const { tryout_id, subject_id } = req.params
 
   let { correct_answer_index, question_explanation } = req.body
+
+  if (!correct_answer_index) return res.status(400).json({ message: 'correct_answer_index is required.' })
 
   if (typeof correct_answer_index === "undefined") {
     return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
@@ -159,7 +170,6 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id'
       let { question, score, answer_options } = req.body
       if (!question) return res.status(400).json({ message: 'question is required.' })
       if (!score) return res.status(400).json({ message: 'score is required.' })
-      if (!answer_options) return res.status(400).json({ message: 'answer_options is required.' })
 
       if (!Array.isArray(answer_options)) {
         answer_options = [answer_options]
@@ -180,6 +190,8 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id'
 router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id/edit_explanation',verifyToken,authorize(['teacher']),async (req, res, next) => {
     const { tryout_id, subject_id, question_id } = req.params
     let { correct_answer_index, question_explanation } = req.body
+
+    if (!correct_answer_index) return res.status(400).json({ message: 'correct_answer_index is required.' })
 
     if (typeof correct_answer_index === "undefined") {
       return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
