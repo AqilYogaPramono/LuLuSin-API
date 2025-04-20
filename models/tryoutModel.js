@@ -261,6 +261,84 @@ class tryoutModel {
       }
     }
     
+    static async getStudentQuestionDetail(idStudent, idTryout, idSubject) {
+      try {
+        const [[studentRow]] = await db.query(
+          'SELECT student_name, NISN FROM students WHERE student_id = ?',
+          { replacements: [idStudent] }
+        );
+    
+        const studentName = studentRow?.student_name || null;
+        const nisn = studentRow?.NISN || null;
+    
+        const [[subjectRow]] = await db.query(
+          `SELECT s.minimal_questions, s.subject_name, sc.subject_category_name 
+           FROM subjects s 
+           JOIN subject_categories sc ON s.id_subject_category = sc.subject_category_id 
+           WHERE s.subject_id = ?`,
+          { replacements: [idSubject] }
+        );
+    
+        const minimalQuestions = subjectRow?.minimal_questions || 0;
+        const subjectName = subjectRow?.subject_name || null;
+        const subjectCategoryName = subjectRow?.subject_category_name || null;
+    
+        const [rows] = await db.query(
+          `SELECT
+             q.question_id,
+             q.question_image AS image_question,
+             q.question,
+             ao.answer_option_id,
+             ao.answer_option
+           FROM (
+             SELECT *
+             FROM questions
+             WHERE id_tryout = ? AND id_subject = ?
+             ORDER BY RAND()
+             LIMIT ?
+           ) AS q
+           LEFT JOIN answer_options ao
+             ON ao.id_question = q.question_id
+           ORDER BY q.question_id, RAND()`,
+          { replacements: [idTryout, idSubject, minimalQuestions] }
+        );
+    
+        const groupedData = [];
+        const map = new Map();
+    
+        rows.forEach(row => {
+          if (!map.has(row.question_id)) {
+            map.set(row.question_id, {
+              question_id: row.question_id,
+              question: row.question,
+              image_question: row.image_question,
+              answer_options: []
+            });
+            groupedData.push(map.get(row.question_id));
+          }
+          map.get(row.question_id).answer_options.push({
+            answer_option_id: row.answer_option_id,
+            answer_option: row.answer_option
+          });
+        });
+    
+        for (let i = groupedData.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [groupedData[i], groupedData[j]] = [groupedData[j], groupedData[i]];
+        }
+    
+        return {
+          student_name: studentName,
+          nisn: nisn,
+          subject_name: subjectName,
+          subject_category_name: subjectCategoryName,
+          questions: groupedData
+        };
+    
+      } catch (err) {
+        throw err;
+      }
+    }
     
 }
 
