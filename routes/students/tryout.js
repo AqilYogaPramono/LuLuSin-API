@@ -1,7 +1,30 @@
 var express = require('express');
 var router = express.Router();
+const TryoutModel = require("../../models/tryoutModel");
+const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
-//menampilakn seluruh list tryout yang belum di kerjakan 
+router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authorize(['student']), async (req, res, next) => {
+    const { idTryout, idSubject } = req.params;
+    const idStudent = req.user.id;
+  
+    try {
+      const data = await TryoutModel.getStudentQuestionDetail(idStudent, idTryout, idSubject);
+      res.status(200).json({
+        success: true,
+        message: "Data berhasil diambil",
+        data: data
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Terjadi kesalahan saat mengambil data",
+        error: error.message
+      });
+    }
+  });
+  
+
+//menampilakn seluruh list tryout yang belum di kerjakan
 //menmapilkan nama tryout berdasrkan id
 //menampilkan nama dan nisn siswa
 //menampilkan soal, gambar soal dan opsi jawaban
