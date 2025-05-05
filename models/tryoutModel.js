@@ -261,85 +261,50 @@ class tryoutModel {
       }
     }
     
-    static async getStudentQuestionDetail(idStudent, idTryout, idSubject) {
-      try {
-        const [[studentRow]] = await db.query(
-          'SELECT student_name, NISN FROM students WHERE student_id = ?',
-          { replacements: [idStudent] }
-        );
-    
-        const studentName = studentRow?.student_name || null;
-        const nisn = studentRow?.NISN || null;
-    
-        const [[subjectRow]] = await db.query(
-          `SELECT s.minimal_questions, s.subject_name, sc.subject_category_name 
-           FROM subjects s 
-           JOIN subject_categories sc ON s.id_subject_category = sc.subject_category_id 
-           WHERE s.subject_id = ?`,
-          { replacements: [idSubject] }
-        );
-    
-        const minimalQuestions = subjectRow?.minimal_questions || 0;
-        const subjectName = subjectRow?.subject_name || null;
-        const subjectCategoryName = subjectRow?.subject_category_name || null;
-    
-        const [rows] = await db.query(
-          `SELECT
-             q.question_id,
-             q.question_image AS image_question,
-             q.question,
-             ao.answer_option_id,
-             ao.answer_option
-           FROM (
-             SELECT *
-             FROM questions
-             WHERE id_tryout = ? AND id_subject = ?
-             ORDER BY RAND()
-             LIMIT ?
-           ) AS q
-           LEFT JOIN answer_options ao
-             ON ao.id_question = q.question_id
-           ORDER BY q.question_id, RAND()`,
-          { replacements: [idTryout, idSubject, minimalQuestions] }
-        );
-    
-        const groupedData = [];
-        const map = new Map();
-    
-        rows.forEach(row => {
-          if (!map.has(row.question_id)) {
-            map.set(row.question_id, {
-              question_id: row.question_id,
-              question: row.question,
-              image_question: row.image_question,
-              answer_options: []
-            });
-            groupedData.push(map.get(row.question_id));
-          }
-          map.get(row.question_id).answer_options.push({
-            answer_option_id: row.answer_option_id,
-            answer_option: row.answer_option
-          });
-        });
-    
-        for (let i = groupedData.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [groupedData[i], groupedData[j]] = [groupedData[j], groupedData[i]];
-        }
-    
-        return {
-          student_name: studentName,
-          nisn: nisn,
-          subject_name: subjectName,
-          subject_category_name: subjectCategoryName,
-          questions: groupedData
-        };
-    
-      } catch (err) {
-        throw err;
-      }
+    // 1. Ambil data siswa (nama, NISN)
+  static async getStudentById(idStudent) {
+    try {
+      const [rows] = await db.query(
+        `SELECT student_name AS nama,
+                NISN AS nisn FROM students WHERE student_id = ?`,
+        { replacements: [idStudent] }
+      );
+      return rows[0] || null;
+    } catch (err) {
+      throw err;
     }
-    
+  }
+
+  // 2. Ambil data subjek (time_limit, kategori, nama subjek)
+  static async getSubjectById(idSubject) {
+    try {
+      const [rows] = await db.query(
+        `SELECT s.time_limit    AS total_waktu,
+                sc.subject_category_name AS kategori_subjek,
+                s.subject_name   AS subjek
+         FROM subjects s
+         JOIN subject_categories sc 
+           ON s.id_subject_category = sc.subject_category_id
+         WHERE s.subject_id = ?`,
+        { replacements: [idSubject] }
+      );
+      return rows[0] || null;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async getQuestionsBySubjectId(subjectId) {
+    try {
+      const [rows] = await db.query(
+        `SELECT q.question_id, q.question_image, q.question, ao.answer_option FROM ( SELECT q.* FROM questions q JOIN subjects s ON q.id_subject = s.subject_id WHERE s.subject_id = ? ORDER BY q.question_id LIMIT 1000000 ) q JOIN subjects s ON q.id_subject = s.subject_id JOIN answer_options ao ON ao.id_question = q.question_id WHERE ( SELECT COUNT(*) FROM questions q2 WHERE q2.id_subject = q.id_subject AND q2.question_id <= q.question_id ) <= s.minimal_questions ORDER BY q.question_id;`,
+        { replacements: [subjectId] }
+      );
+      return rows;
+    } catch (err) {
+      throw err;
+    }
+  }
 }
 
 module.exports = tryoutModel
