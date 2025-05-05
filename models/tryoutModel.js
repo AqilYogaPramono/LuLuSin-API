@@ -260,8 +260,7 @@ class tryoutModel {
         throw error
       }
     }
-    
-    // 1. Ambil data siswa (nama, NISN)
+
   static async getStudentById(idStudent) {
     try {
       const [rows] = await db.query(
@@ -275,7 +274,6 @@ class tryoutModel {
     }
   }
 
-  // 2. Ambil data subjek (time_limit, kategori, nama subjek)
   static async getSubjectById(idSubject) {
     try {
       const [rows] = await db.query(
@@ -294,11 +292,11 @@ class tryoutModel {
     }
   }
 
-  static async getQuestionsBySubjectId(subjectId) {
+  static async getQuestionsBySubjectId(idSubject, idTryout) {
     try {
       const [rows] = await db.query(
-        `SELECT q.question_id, q.question_image, q.question, ao.answer_option FROM ( SELECT q.* FROM questions q JOIN subjects s ON q.id_subject = s.subject_id WHERE s.subject_id = ? ORDER BY q.question_id LIMIT 1000000 ) q JOIN subjects s ON q.id_subject = s.subject_id JOIN answer_options ao ON ao.id_question = q.question_id WHERE ( SELECT COUNT(*) FROM questions q2 WHERE q2.id_subject = q.id_subject AND q2.question_id <= q.question_id ) <= s.minimal_questions ORDER BY q.question_id;`,
-        { replacements: [subjectId] }
+        `WITH numbered_questions AS ( SELECT q.question_id, q.question_image, q.question, s.minimal_questions, ROW_NUMBER() OVER ( PARTITION BY q.id_subject, q.id_tryout ORDER BY q.question_id ) AS rn FROM questions AS q JOIN subjects AS s ON s.subject_id = q.id_subject WHERE q.id_subject = ? AND q.id_tryout = ? ), limited_questions AS ( SELECT question_id, question_image, question FROM numbered_questions WHERE rn <= minimal_questions ) SELECT lq.question_id, lq.question_image AS image_question, lq.question, JSON_ARRAYAGG(ao.answer_option) AS answer_options FROM limited_questions AS lq JOIN answer_options AS ao ON ao.id_question = lq.question_id GROUP BY lq.question_id, lq.question_image, lq.question;`,
+        { replacements: [idSubject, idTryout] }
       );
       return rows;
     } catch (err) {
