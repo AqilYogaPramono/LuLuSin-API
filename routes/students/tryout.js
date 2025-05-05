@@ -8,21 +8,14 @@ router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authoriz
     const idStudent = req.user.id;
   
     try {
-      const data = await TryoutModel.getStudentQuestionDetail(idStudent, idTryout, idSubject);
-      res.status(200).json({
-        success: true,
-        message: "Data berhasil diambil",
-        data: data
-      });
+      const studentData = await TryoutModel.getStudentById(idStudent)
+      const subjectData = await TryoutModel.getSubjectById(idSubject)
+      const questionData = await TryoutModel.getQuestionsBySubjectId(idSubject)
+      res.status(200).json({ studentData, subjectData, questionData });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Terjadi kesalahan saat mengambil data",
-        error: error.message
-      });
+      res.status(500).json({ message: error.message });
     }
   });
-  
 
 //menampilakn seluruh list tryout yang belum di kerjakan
 //menmapilkan nama tryout berdasrkan id
