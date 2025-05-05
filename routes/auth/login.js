@@ -49,7 +49,7 @@ router.post('/login', async (req, res, next) => {
             payload = { id: user.admin_id, username: user.admin_name, type: 'admin'}
         }
 
-        const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn: '1h'})
+        const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn: '100d'})
 
         res.status(200).json ({ message: 'OK', userType, token})
     } catch (error) {
