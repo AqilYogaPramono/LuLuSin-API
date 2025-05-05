@@ -263,45 +263,48 @@ class tryoutModel {
 
   static async getStudentById(idStudent) {
     try {
-      const [rows] = await db.query(
-        `SELECT student_name AS nama,
-                NISN AS nisn FROM students WHERE student_id = ?`,
+      const [rows] = await db.query(`SELECT student_name AS nama, NISN AS nisn FROM students WHERE student_id = ?`,
         { replacements: [idStudent] }
-      );
-      return rows[0] || null;
+      )
+      return rows[0] || null
     } catch (err) {
-      throw err;
+      throw err
     }
   }
 
   static async getSubjectById(idSubject) {
     try {
-      const [rows] = await db.query(
-        `SELECT s.time_limit    AS total_waktu,
-                sc.subject_category_name AS kategori_subjek,
-                s.subject_name   AS subjek
-         FROM subjects s
-         JOIN subject_categories sc 
-           ON s.id_subject_category = sc.subject_category_id
-         WHERE s.subject_id = ?`,
+      const [rows] = await db.query(`SELECT s.time_limit AS total_waktu,sc.subject_category_name AS kategori_subjek, s.subject_name AS subjek FROM subjects s JOIN subject_categories sc ON s.id_subject_category = sc.subject_category_id WHERE s.subject_id = ?`,
         { replacements: [idSubject] }
-      );
-      return rows[0] || null;
+      )
+      return rows[0] || null
     } catch (err) {
-      throw err;
+      throw err
     }
   }
 
   static async getQuestionsBySubjectId(idSubject, idTryout) {
     try {
       const [rows] = await db.query(
-        `WITH numbered_questions AS ( SELECT q.question_id, q.question_image, q.question, s.minimal_questions, ROW_NUMBER() OVER ( PARTITION BY q.id_subject, q.id_tryout ORDER BY q.question_id ) AS rn FROM questions AS q JOIN subjects AS s ON s.subject_id = q.id_subject WHERE q.id_subject = ? AND q.id_tryout = ? ), limited_questions AS ( SELECT question_id, question_image, question FROM numbered_questions WHERE rn <= minimal_questions ) SELECT lq.question_id, lq.question_image AS image_question, lq.question, JSON_ARRAYAGG(ao.answer_option) AS answer_options FROM limited_questions AS lq JOIN answer_options AS ao ON ao.id_question = lq.question_id GROUP BY lq.question_id, lq.question_image, lq.question;`,
+        `WITH numbered_questions AS ( SELECT q.question_id, q.question_image, q.question, s.minimal_questions, ROW_NUMBER() OVER ( PARTITION BY q.id_subject, q.id_tryout ORDER BY q.question_id ) AS rn FROM questions AS q JOIN subjects AS s ON s.subject_id = q.id_subject WHERE q.id_subject = ? AND q.id_tryout = ? ), limited_questions AS ( SELECT question_id, question_image, question FROM numbered_questions WHERE rn <= minimal_questions ) SELECT lq.question_id, lq.question_image AS image_question, lq.question, JSON_ARRAYAGG( JSON_OBJECT( 'id', ao.answer_option_id, 'text', ao.answer_option ) ) AS answer_options FROM limited_questions AS lq JOIN answer_options AS ao ON ao.id_question = lq.question_id GROUP BY lq.question_id, lq.question_image, lq.question`,
         { replacements: [idSubject, idTryout] }
-      );
-      return rows;
+      )
+      return rows
     } catch (err) {
-      throw err;
+      throw err
     }
+  }
+
+  static async storeStudentAnswer({ idStudent, questionId, answerOptionId }) {
+    const [[explRow]] = await db.query(
+      `SELECT qe.questions_explanation_id FROM questions_explanations AS qe left JOIN answer_options AS ao ON ao.answer_option_id = qe.id_answer_option WHERE ao.id_question = ? LIMIT 1`, { replacements: [questionId] }
+    )
+
+    const questionsExplanationId = explRow.questions_explanation_id
+
+    const [insertResult] = await db.query(`INSERT INTO students_answers (id_student, answer_options_id, id_answer_option) VALUES (?, ?, ?)`, { replacements: [idStudent, answerOptionId, questionsExplanationId] }
+    )
+    return insertResult
   }
 }
 

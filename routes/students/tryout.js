@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
 const TryoutModel = require("../../models/tryoutModel");
-const { verifyToken, authorize } = require('../../config/middleware/jwt')
+const { verifyToken, authorize } = require('../../config/middleware/jwt');
+const tryoutModel = require('../../models/tryoutModel');
 
 //menampilakn seluruh list tryout yang belum di kerjakan
 //menmapilkan nama tryout berdasrkan id
@@ -22,8 +23,21 @@ router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authoriz
     }
   });
 
+router.post('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
+  try {
+    const idStudent      = req.user.id;
+    const { questionId } = req.params;
+    const { answer_option_id: answerOptionId } = req.body;
+    
+    const result = await TryoutModel.storeStudentAnswer({ idStudent, questionId, answerOptionId });
+    return res.status(201).json({ message: 'CREATED' });
+    
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
 
-//push id siswa, id soal, id jawaban
 //update id siswa, id soal, id jawaban
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
 //menampilkan totaol nilai rata rata dari seluruh sub test, jawaban benar untuk selurh sub test, jabawan kossong untuk seluruh sub test 
