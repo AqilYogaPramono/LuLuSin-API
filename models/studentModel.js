@@ -30,6 +30,22 @@ class studentModel {
             throw err
         }
     }
+    static async getTryoutStudent() {
+        try {
+            const [result] = await db.query(`select * from tryouts where status = "show"`)
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
+    static async getTryoutStudentId(id) {
+        try {
+            const [result] = await db.query(`select tryout_name from tryouts where tryout_id = ? and status = 'show'`, (id))
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
     
 }
 

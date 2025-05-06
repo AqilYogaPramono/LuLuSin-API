@@ -36,7 +36,14 @@ class subjectModel {
             throw err
         }
     }
-    
+    static async SubjectJoinCattegory() {
+        try {
+            const [result] = await db.query("select subjects.subject_name, subjects.time_limit, subjects.minimal_questions, subject_categories.subject_category_name from subjects left join subject_categories on subjects.id_subject_category = subject_categories.subject_category_id")
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = subjectModel
