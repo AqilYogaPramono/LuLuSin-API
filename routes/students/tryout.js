@@ -1,31 +1,41 @@
 var express = require('express')
 var router = express.Router()
-const studentModel = require('../../models/studentModel');
-const TryoutModel = require("../../models/tryoutModel")
-const subjectModel = require('../../models/subjectModel');
+const studentModel = require('../../models/studentModel')
+const tryoutModel = require("../../models/tryoutModel")
+const subjectModel = require('../../models/subjectModel')
 const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
 //menampilakn seluruh list tryout yang belum di kerjakan dan sudah dikerjakan
-router.get('/student/tryout', verifyToken, authorize (['student']), async (req, res, next) => {
+router.get('/student/tryout', verifyToken, authorize(['student']), async (req, res, next) => {
   try {
-    let getStudentTryout = await studentModel.getTryoutStudent();
-    res.status(200).json ({ getStudentTryout})
-} catch (error) {
-    res.status(500).json ({ message: error.message })
-}
+    const idStudent = req.user.id
+
+    const doneTryouts = await studentModel.getDoneTryouts(idStudent)
+    const notDoneTryouts = await studentModel.getNotDoneTryouts(idStudent)
+
+    res.status(200).json({
+      done: doneTryouts,
+      not_done: notDoneTryouts
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
 })
 
+
 //menmapilkan nama tryout berdasrkan id
-router.get('/student/tryout/:id_subject', verifyToken, authorize (['student']), async (req, res, next) => {
-  try {
-    let id_subject = req.params.id_subject
-    let getStudentTryoutId = await studentModel.getTryoutStudent(id_subject);
-    let getSubject = await subjectModel.SubjectJoinCattegory()
-    res.status(200).json ({ getStudentTryoutId, getSubject})
-} catch (error) {
-    res.status(500).json ({ message: error.message })
-}
-})
+  router.get('/student/tryout/:idTryout', verifyToken, authorize(['student']), async (req, res, next) => {
+    try {
+      const { idTryout } = req.params
+
+      const getSubject = await subjectModel.getTotalQuestionAndTotalTime()
+      const getTryout = await tryoutModel.getTryoutName(idTryout)
+
+      res.status(200).json({ data: getSubject, getTryout })
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  })
 
 //menampilkan soal, gambar soal dan opsi jawaban
 router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authorize(['student']), async (req, res, next) => {

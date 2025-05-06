@@ -1,4 +1,4 @@
-const { db } = require('../config/database/connection');
+const { db } = require('../config/database/connection')
 
 class subjectModel {
     static async getall() {
@@ -44,6 +44,16 @@ class subjectModel {
             throw err
         }
     }
+
+    static async getTotalQuestionAndTotalTime(subjectId) {
+        try {
+            const [result] = await db.query(
+                `SELECT SUM(minimal_questions) AS total_minimal_questions, SUM(time_limit) AS total_time_limit FROM subjects`)
+            return result[0]
+        } catch (err) {
+            throw err
+        }
+    }      
 }
 
 module.exports = subjectModel
