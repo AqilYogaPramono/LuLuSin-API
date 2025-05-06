@@ -48,15 +48,6 @@ class tryoutModel {
       }
   }
     
-    static async UnattemptedTryouts(studenId) {
-        try {
-            const [rows] = await db.query("select t.tryout_name from tryouts t where t.tryout_id not in(select distinct q.id_tryout from questions q join students_answers sa on sa.id_answer_option = q.question_id where sa.id_student = ? ) and t.status = 'show'", {replacements: [studenId]})
-            return rows
-        } catch (err) {
-            throw err
-        }
-    }
-    
     static async dashboard() { 
       try {
           const [rows] = await db.query(
@@ -311,12 +302,21 @@ class tryoutModel {
     const [updateResult] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ? )`, {
         replacements: [answerOptionId, idStudent, questionId]
       }
-    );
+    )
 
-    return updateResult;
+    return updateResult
   }
 
-  
+  static async getTryoutName(idTryout) {
+    try {
+      const [rows] = await db.query(`select tryout_id, tryout_name from tryouts where tryout_id = ?`,
+        { replacements: [idTryout] }
+      )
+      return rows[0]
+    } catch (err) {
+      throw err
+    }
+  }
 }
 
 module.exports = tryoutModel

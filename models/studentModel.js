@@ -1,4 +1,4 @@
-const { db } = require('../config/database/connection');
+const { db } = require('../config/database/connection')
 
 class studentModel {
     static async login(email) {
@@ -30,23 +30,26 @@ class studentModel {
             throw err
         }
     }
-    static async getTryoutStudent() {
+
+    static async getDoneTryouts(idStudent) {
         try {
-            const [result] = await db.query(`select * from tryouts where status = "show"`)
+            const [result] = await db.query(`SELECT DISTINCT t.tryout_id, t.tryout_name FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id JOIN tryouts t ON q.id_tryout = t.tryout_id WHERE sa.id_student AND t.status = 'show'
+            `, [idStudent])
             return result
         } catch (err) {
             throw err
         }
-    }
-    static async getTryoutStudentId(id) {
-        try {
-            const [result] = await db.query(`select tryout_name from tryouts where tryout_id = ? and status = 'show'`, (id))
-            return result
-        } catch (err) {
-            throw err
-        }
-    }
+    }    
     
+    static async getNotDoneTryouts(idStudent) {
+        try {
+            const [result] = await db.query(`
+                SELECT t.tryout_id, t.tryout_name FROM tryouts t WHERE t.status = 'show' AND t.tryout_id NOT IN ( SELECT q.id_tryout FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE sa.id_student)`, [idStudent])
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = studentModel
