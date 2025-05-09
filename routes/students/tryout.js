@@ -102,6 +102,19 @@ router.delete('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyT
   }
 )
 
+//membuat halaman transition 
+router.get('/student/:idSubject/transition', verifyToken, authorize(['student']), async (req, res) => {
+  try {
+    const { idSubject } = req.params
+
+    const getSubject = await subjectModel.getSubjectAndCB(idSubject)
+
+    res.status(200).json({getSubject})
+  } catch (error) {
+    res.status(500).json({ message: error.messag })
+  }
+})
+
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
 
 
