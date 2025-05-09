@@ -103,7 +103,20 @@ router.delete('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyT
 )
 
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
+router.get("/student/tryout/:idTryout/:idSubject/explanation", verifyToken, authorize(['student']), async (req, res, next) => {
+  const { idTryout, idSubject } = req.params
+  const idStudent = req.user.id
 
+  try {
+    const studentData = await tryoutModel.getStudentById(idStudent)
+    const subjectExpData = await tryoutModel.getExpSubjectById(idSubject)
+    const detail = await tryoutModel.getTryoutDetailResult(idTryout, idStudent)
+
+    res.status(200).json({ studentData, subjectExpData, detail })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
 //mennampilkan nilai rata rata, total jawaban benar, salah dan kosong dari total tryout dan menampilkan nilai rata rata, total jawaban benar, salah dan kosong dari total tryout berdasarkan subjek
 router.get('/student/tryout/:idTryout/result', verifyToken, authorize(['student']), async (req, res) => {

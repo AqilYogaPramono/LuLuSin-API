@@ -478,6 +478,61 @@ class tryoutModel {
     }
     return result
   }
+
+    static async getExpSubjectById(idSubject) {
+    try {
+      const [rows] = await db.query(`SELECT sc.subject_category_name AS kategori_subjek, s.subject_name AS subjek FROM subjects s JOIN subject_categories sc ON s.id_subject_category = sc.subject_category_id WHERE s.subject_id = ?`,
+        { replacements: [idSubject] }
+      )
+      return rows[0]
+    } catch (err) {
+      throw err
+    }
+  }
+
+  static async getTryoutDetailResult(idTryout, idStudent) {
+    const [rows] = await db.query(`
+      SELECT 
+        q.question_id AS id_question,
+        q.question_image AS image_question,
+        q.question,
+        ao.answer_option_id,
+        ao.answer_option,
+        sa.answer_options_id AS student_answer_option_id,
+        sa2.answer_option AS jawaban_siswa,
+        qe.id_answer_option AS correct_answer_option_id,
+        ao_correct.answer_option AS correct_answer
+      FROM questions q
+      LEFT JOIN answer_options ao ON ao.id_question = q.question_id
+      LEFT JOIN students_answers sa ON sa.answer_options_id = ao.answer_option_id AND sa.id_student = :idStudent
+      LEFT JOIN answer_options sa2 ON sa.answer_options_id = sa2.answer_option_id
+      LEFT JOIN questions_explanations qe ON qe.id_answer_option = ao.answer_option_id
+      LEFT JOIN answer_options ao_correct ON qe.id_answer_option = ao_correct.answer_option_id
+      WHERE q.id_tryout = :idTryout
+      ORDER BY q.question_id, ao.answer_option_id
+    `, { replacements: { idTryout, idStudent } })
+
+    // Gabungkan opsi jawaban per soal
+    const map = new Map()
+    for (const row of rows) {
+      if (!map.has(row.id_question)) {
+        map.set(row.id_question, {
+          id_question: row.id_question,
+          image_question: row.image_question,
+          question: row.question,
+          answer_options: [],
+          jawaban_siswa: null,
+          correct_answer: null
+        })
+      }
+      const soal = map.get(row.id_question)
+      soal.answer_options.push(row.answer_option)
+      // Set jawaban siswa dan correct_answer hanya sekali per soal
+      if (!soal.jawaban_siswa && row.jawaban_siswa) soal.jawaban_siswa = row.jawaban_siswa
+      if (!soal.correct_answer && row.correct_answer) soal.correct_answer = row.correct_answer
+    }
+    return Array.from(map.values())
+  }
 }
 
 module.exports = tryoutModel
