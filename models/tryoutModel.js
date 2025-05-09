@@ -353,7 +353,60 @@ class tryoutModel {
     } catch (err) {
         throw err
     }
-}
+  }
+
+  static async getTryoutResult(idTryout, idStudent) {
+    const [rows] = await db.query(`
+      SELECT 
+        q.question_id,
+        q.score,
+        sa.answer_options_id AS student_answer_option_id,
+        qe.id_answer_option AS correct_answer_option_id
+      FROM questions q
+      LEFT JOIN (
+        SELECT sa.answer_options_id, ao.id_question
+        FROM students_answers sa
+        JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
+        WHERE sa.id_student = :idStudent
+      ) sa ON sa.id_question = q.question_id
+      LEFT JOIN questions_explanations qe ON qe.id_answer_option = (
+        SELECT ao2.answer_option_id
+        FROM answer_options ao2
+        WHERE ao2.id_question = q.question_id
+        AND ao2.answer_option_id = qe.id_answer_option
+        LIMIT 1
+      )
+      WHERE q.id_tryout = :idTryout
+    `, { replacements: { idStudent, idTryout } });
+  
+    let totalScore = 0;
+    let totalMaxScore = 0;
+    let totalCorrect = 0;
+    let totalWrong = 0;
+    let totalEmpty = 0;
+  
+    for (const row of rows) {
+      totalMaxScore += row.score || 0;
+      if (!row.student_answer_option_id) {
+        totalEmpty++;
+      } else if (row.student_answer_option_id === row.correct_answer_option_id) {
+        totalCorrect++;
+        totalScore += row.score || 0;
+      } else {
+        totalWrong++;
+      }
+    }
+  
+    const averageScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
+  
+    return {
+      average_score: averageScore,
+      total_correct: totalCorrect,
+      total_wrong: totalWrong,
+      total_empty: totalEmpty
+    };
+  }
+
 }
 
 module.exports = tryoutModel

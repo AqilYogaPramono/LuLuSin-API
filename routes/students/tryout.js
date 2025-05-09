@@ -38,7 +38,7 @@ router.get('/student/tryout', verifyToken, authorize(['student']), async (req, r
   })
 
 //menampilkan soal, gambar soal dan opsi jawaban
-router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authorize(['student']), async (req, res, next) => {
+router.get("/student/tryout/:idTryout/:idSubject/taking", verifyToken, authorize(['student']), async (req, res, next) => {
     const { idTryout, idSubject } = req.params
     const idStudent = req.user.id
   
@@ -53,7 +53,7 @@ router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authoriz
   })
 
   //membuat jawaban siswa dan membandingkannya dengan jawaban benar
-router.post('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
+router.post('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
   try {
     const idStudent      = req.user.id
     const { questionId, idTryout, idSubject } = req.params
@@ -69,7 +69,7 @@ router.post('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyTo
 )
 
 //update id siswa, id soal, id jawaban 
-router.patch('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res) => {
+router.patch('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res) => {
   try {
     const idStudent = req.user.id
     const { questionId } = req.params
@@ -89,7 +89,7 @@ router.patch('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyT
 )
 
 //menghapus jawawabn yang pernah di inputkan siswa
-router.delete('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
+router.delete('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
   try {
     const { questionId, idTryout, idSubject } = req.params
     
@@ -105,6 +105,17 @@ router.delete('/students/tryout/:idTryout/:idSubject/:questionId/taking', verify
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
 
 //mennampilkan nilai rata rata, total jawaban benar, salah dan kosong dari total tryout dan menampilkan nilai rata rata, total jawaban benar, salah dan kosong dari total tryout berdasarkan subjek
+router.get('/student/tryout/:idTryout/result', verifyToken, authorize(['student']), async (req, res) => {
+  try {
+    const idStudent = req.user.id
+    const { idTryout } = req.params
 
+    const summary = await tryoutModel.getTryoutResult(idTryout, idStudent)
+
+    res.status(200).json(summary)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
 module.exports = router
