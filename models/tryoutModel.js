@@ -286,34 +286,13 @@ class tryoutModel {
     }
   }
 
-  // static async storeStudentAnswer({ idStudent, questionId, answerOptionId }) {
-  //   const [[explRow]] = await db.query(
-  //     `SELECT qe.questions_explanation_id FROM questions_explanations AS qe left JOIN answer_options AS ao ON ao.answer_option_id = qe.id_answer_option WHERE ao.id_question = ? LIMIT 1`, { replacements: [questionId] }
-  //   )
-
-  //   const questionsExplanationId = explRow.questions_explanation_id
-
-  //   const [insertResult] = await db.query(`INSERT INTO students_answers (id_student, answer_options_id, id_answer_option) VALUES (?, ?, ?)`, { replacements: [idStudent, answerOptionId, questionsExplanationId] }
-  //   )
-  //   return insertResult
-  // }
-
-  // static async updateStudentAnswer({ idStudent, questionId, answerOptionId }) {
-  //   const [result] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ? )`, {
-  //       replacements: [answerOptionId, idStudent, questionId]
-  //     }
-  //   )
-
-  //   return result
-  // }
-
   static async storeStudentAnswer({ idStudent, questionId, answerOptionId, idSubject, idTryout }) {
     try {
       const [checkQuestion] = await db.query(
         `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
         }
       )
-      if(!checkQuestion) {
+      if(checkQuestion == 0) {
         throw new Error('Soal tidak sesuai dengan tryout dan subjek')
       }
   
@@ -321,15 +300,15 @@ class tryoutModel {
         `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId]
         }
       )
-      if(!checkAnswerOption) {
+      if(checkAnswerOption == 0) {
         throw new Error('Opsi jawaban tidak valid untuk soal ini')
       }
       
       const [validationInsert] = await db.query(
-        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId]
+        `SELECT count(sa.student_answer_id) FROM answer_options ao JOIN students_answers sa ON ao.answer_option_id = sa.answer_options_id WHERE ao.id_question = ? AND sa.id_student = ?`, { replacements: [questionId, answerOptionId]
         }
       )
-      if(!validationInsert) {
+      if(validationInsert > 0) {
         throw new Error('Siswa sudah menjawab soal ini')
       }
 
@@ -366,6 +345,15 @@ class tryoutModel {
       throw err
     }
   }
+
+  static async deleetStudentAnswer(questionId, idSubject, idTryout) {
+    try {
+        const [result] = await db.query("DELETE sa FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?", {replacements: [questionId, idTryout, idSubject]})
+        return result
+    } catch (err) {
+        throw err
+    }
+}
 }
 
 module.exports = tryoutModel
