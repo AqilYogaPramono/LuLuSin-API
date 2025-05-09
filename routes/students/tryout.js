@@ -52,13 +52,14 @@ router.get("/students/tryout/:idTryout/:idSubject/taking", verifyToken, authoriz
     }
   })
 
+  //membuat jawaban siswa dan membandingkannya dengan jawaban benar
 router.post('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
   try {
     const idStudent      = req.user.id
-    const { questionId } = req.params
-    const { answer_option_id: answerOptionId } = req.body
+    const { questionId, idTryout, idSubject } = req.params
+    const { answerOptionId } = req.body
     
-    const result = await tryoutModel.storeStudentAnswer({ idStudent, questionId, answerOptionId })
+    const result = await tryoutModel.storeStudentAnswer({ idStudent, questionId, answerOptionId, idSubject, idTryout })
     return res.status(201).json({ message: 'CREATED' })
 
     } catch (error) {
@@ -67,14 +68,14 @@ router.post('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyTo
   }
 )
 
-//update id siswa, id soal, id jawaban
+//update id siswa, id soal, id jawaban 
 router.patch('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res) => {
   try {
     const idStudent = req.user.id
     const { questionId } = req.params
     const { answer_option_id: answerOptionId } = req.body
     
-    const result = await tryoutModel.updateStudentAnswer({ idStudent, questionId: Number(questionId), answerOptionId: Number(answerOptionId), })
+    const result = await tryoutModel.updateStudentAnswer({ idStudent, questionId, answerOptionId})
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Data jawaban tidak ditemukan atau tidak sesuai' })
@@ -87,11 +88,11 @@ router.patch('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyT
   }
 )
 
+//menghapus seluruh jawawabn yang pernah di inputkan siswa
+
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
 
-//menampilkan totaol nilai rata rata dari seluruh sub test, jawaban benar untuk selurh sub test, jabawan kossong untuk seluruh sub test 
+//mennampilkan nilai rata rata, total jawaban benar, salah dan kosong dari total tryout dan menampilkan nilai rata rata, total jawaban benar, salah dan kosong dari total tryout berdasarkan subjek
 
-
-//menampilkan nilai nilai rata rata dari seluruh sub test, jawaban benar untuk selurh sub test, jabawan kossong untuk per subjek 
 
 module.exports = router
