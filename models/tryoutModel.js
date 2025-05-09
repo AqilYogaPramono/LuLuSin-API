@@ -377,36 +377,107 @@ class tryoutModel {
         LIMIT 1
       )
       WHERE q.id_tryout = :idTryout
-    `, { replacements: { idStudent, idTryout } });
+    `, { replacements: { idStudent, idTryout } })
   
-    let totalScore = 0;
-    let totalMaxScore = 0;
-    let totalCorrect = 0;
-    let totalWrong = 0;
-    let totalEmpty = 0;
+    let totalScore = 0
+    let totalMaxScore = 0
+    let totalCorrect = 0
+    let totalWrong = 0
+    let totalEmpty = 0
   
     for (const row of rows) {
-      totalMaxScore += row.score || 0;
+      totalMaxScore += row.score || 0
       if (!row.student_answer_option_id) {
-        totalEmpty++;
+        totalEmpty++
       } else if (row.student_answer_option_id === row.correct_answer_option_id) {
-        totalCorrect++;
-        totalScore += row.score || 0;
+        totalCorrect++
+        totalScore += row.score || 0
       } else {
-        totalWrong++;
+        totalWrong++
       }
     }
   
-    const averageScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
+    const averageScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0
   
     return {
       average_score: averageScore,
       total_correct: totalCorrect,
       total_wrong: totalWrong,
       total_empty: totalEmpty
-    };
+    }
   }
 
+  static async getTryoutResultByCategorySubject(idTryout, idStudent) {
+    const [rows] = await db.query(`
+      SELECT 
+        sc.subject_category_name,
+        s.subject_id,
+        s.subject_name,
+        q.question_id,
+        q.score,
+        sa.answer_options_id AS student_answer_option_id,
+        qe.id_answer_option AS correct_answer_option_id
+      FROM questions q
+      JOIN subjects s ON q.id_subject = s.subject_id
+      JOIN subject_categories sc ON s.id_subject_category = sc.subject_category_id
+      LEFT JOIN (
+        SELECT sa.answer_options_id, ao.id_question
+        FROM students_answers sa
+        JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
+        WHERE sa.id_student = :idStudent
+      ) sa ON sa.id_question = q.question_id
+      LEFT JOIN questions_explanations qe ON qe.id_answer_option = (
+        SELECT ao2.answer_option_id
+        FROM answer_options ao2
+        WHERE ao2.id_question = q.question_id
+        AND ao2.answer_option_id = qe.id_answer_option
+        LIMIT 1
+      )
+      WHERE q.id_tryout = :idTryout
+      ORDER BY sc.subject_category_name, s.subject_name, q.question_id
+    `, { replacements: { idStudent, idTryout } })
+
+    const result = {}
+    for (const row of rows) {
+      const cat = row.subject_category_name
+      const subj = row.subject_name
+      if (!result[cat]) result[cat] = {}
+      if (!result[cat][subj]) {
+        result[cat][subj] = {
+          nama_subject: subj,
+          nilai_rata_rata: 0,
+          total_jawaban_benar: 0,
+          total_jawaban_salah: 0,
+          total_jawaban_kosong: 0,
+          _totalScore: 0,
+          _totalMaxScore: 0,
+          _totalSoal: 0
+        }
+      }
+      const sub = result[cat][subj]
+      sub._totalSoal++
+      sub._totalMaxScore += row.score || 0
+      if (!row.student_answer_option_id) {
+        sub.total_jawaban_kosong++
+      } else if (row.student_answer_option_id === row.correct_answer_option_id) {
+        sub.total_jawaban_benar++
+        sub._totalScore += row.score || 0
+      } else {
+        sub.total_jawaban_salah++
+      }
+    }
+
+    for (const cat in result) {
+      for (const subj in result[cat]) {
+        const sub = result[cat][subj]
+        sub.nilai_rata_rata = sub._totalMaxScore > 0 ? Math.round((sub._totalScore / sub._totalMaxScore) * 100) : 0
+        delete sub._totalScore
+        delete sub._totalMaxScore
+        delete sub._totalSoal
+      }
+    }
+    return result
+  }
 }
 
 module.exports = tryoutModel
