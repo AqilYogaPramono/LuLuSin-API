@@ -75,7 +75,7 @@ router.patch('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyT
     const { questionId } = req.params
     const { answer_option_id: answerOptionId } = req.body
     
-    const result = await tryoutModel.updateStudentAnswer({ idStudent, questionId, answerOptionId})
+    const result = await tryoutModel.updateStudentAnswer(idStudent, questionId, answerOptionId)
 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Data jawaban tidak ditemukan atau tidak sesuai' })
@@ -88,7 +88,19 @@ router.patch('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyT
   }
 )
 
-//menghapus seluruh jawawabn yang pernah di inputkan siswa
+//menghapus jawawabn yang pernah di inputkan siswa
+router.delete('/students/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
+  try {
+    const { questionId, idTryout, idSubject } = req.params
+    
+    const result = await tryoutModel.deleetStudentAnswer(questionId, idSubject, idTryout)
+    return res.status(201).json({ message: 'OK' })
+
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+)
 
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
 
