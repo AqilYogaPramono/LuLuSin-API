@@ -7,7 +7,9 @@ const tryoutSubjectScoreTable = db.define(`tryout_subject_score`,{
         primaryKey: true,
         autoIncrement: true
     },
-    id_student_answer: DataTypes.INTEGER,
+    id_subject: DataTypes.INTEGER,
+    id_student: DataTypes.INTEGER,
+    id_tryout: DataTypes.INTEGER,
     average_score: DataTypes.INTEGER,
     total_correct: DataTypes.INTEGER,
     total_wrong: DataTypes.INTEGER,
