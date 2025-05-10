@@ -1,5 +1,6 @@
 const { db } = require('../config/database/connection')
 const { Sequelize, QueryTypes } = require('sequelize')
+const { student } = require('../config/database/table/controler')
 
 
 class tryoutModel {
@@ -305,18 +306,22 @@ class tryoutModel {
       }
       
       const [validationInsert] = await db.query(
-        `SELECT count(sa.student_answer_id) FROM answer_options ao JOIN students_answers sa ON ao.answer_option_id = sa.answer_options_id WHERE ao.id_question = ? AND sa.id_student = ?`, { replacements: [questionId, answerOptionId]
-        }
-      )
-      if(validationInsert > 0) {
-        throw new Error('Siswa sudah menjawab soal ini')
+        `SELECT COUNT(sa.student_answer_id) AS total
+         FROM answer_options ao
+         JOIN students_answers sa ON ao.answer_option_id = sa.answer_options_id
+         WHERE ao.id_question = ? AND sa.id_student = ?`, 
+        { replacements: [questionId, idStudent] }
+      );
+      
+      if (validationInsert[0].total > 0) {
+        throw new Error('Siswa sudah menjawab soal ini');
       }
 
       const [explRow] = await db.query(
-        `SELECT qe.id_answer_option FROM questions_explanations qe JOIN answer_options ao ON qe.id_answer_option = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ?`, { replacements: [questionId]
+        `SELECT qe.questions_explanation_id FROM questions_explanations qe JOIN answer_options ao ON qe.id_answer_option = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ?`, { replacements: [questionId]
         }
       )
-      const questionsExplanationId = explRow[0].id_answer_option
+      const questionsExplanationId = explRow[0].questions_explanation_id
   
       const [insertResult] = await db.query(`INSERT INTO students_answers (id_student, answer_options_id, id_answer_option) VALUES (?, ?, ?)`, { replacements: [idStudent, answerOptionId, questionsExplanationId] }
       )
