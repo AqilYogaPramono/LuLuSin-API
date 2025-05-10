@@ -407,77 +407,13 @@ class tryoutModel {
     }
   }
 
-  //nilai 
   static async getTryoutResultByCategorySubject(idTryout, idStudent) {
-    const [rows] = await db.query(`
-      SELECT 
-        sc.subject_category_name,
-        s.subject_id,
-        s.subject_name,
-        q.question_id,
-        q.score,
-        sa.answer_options_id AS student_answer_option_id,
-        qe.id_answer_option AS correct_answer_option_id
-      FROM questions q
-      JOIN subjects s ON q.id_subject = s.subject_id
-      JOIN subject_categories sc ON s.id_subject_category = sc.subject_category_id
-      LEFT JOIN (
-        SELECT sa.answer_options_id, ao.id_question
-        FROM students_answers sa
-        JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
-        WHERE sa.id_student = :idStudent
-      ) sa ON sa.id_question = q.question_id
-      LEFT JOIN questions_explanations qe ON qe.id_answer_option = (
-        SELECT ao2.answer_option_id
-        FROM answer_options ao2
-        WHERE ao2.id_question = q.question_id
-        AND ao2.answer_option_id = qe.id_answer_option
-        LIMIT 1
-      )
-      WHERE q.id_tryout = :idTryout
-      ORDER BY sc.subject_category_name, s.subject_name, q.question_id
-    `, { replacements: { idStudent, idTryout } })
-
-    const result = {}
-    for (const row of rows) {
-      const cat = row.subject_category_name
-      const subj = row.subject_name
-      if (!result[cat]) result[cat] = {}
-      if (!result[cat][subj]) {
-        result[cat][subj] = {
-          nama_subject: subj,
-          nilai_rata_rata: 0,
-          total_jawaban_benar: 0,
-          total_jawaban_salah: 0,
-          total_jawaban_kosong: 0,
-          _totalScore: 0,
-          _totalMaxScore: 0,
-          _totalSoal: 0
-        }
-      }
-      const sub = result[cat][subj]
-      sub._totalSoal++
-      sub._totalMaxScore += row.score || 0
-      if (!row.student_answer_option_id) {
-        sub.total_jawaban_kosong++
-      } else if (row.student_answer_option_id === row.correct_answer_option_id) {
-        sub.total_jawaban_benar++
-        sub._totalScore += row.score || 0
-      } else {
-        sub.total_jawaban_salah++
-      }
+    try {
+      const [rows] = await db.query(`SELECT JSON_OBJECT( 'nama_kategori', cs.subject_category_name, 'subjek', JSON_ARRAYAGG( JSON_OBJECT( 'nama_subjek', s.subject_name, 'nilai_rata_rata', ts.average_score, 'total_jawaban_benar', ts.total_correct, 'total_jawaban_salah', ts.total_wrong, 'total_jawaban_kosong', ts.total_empty ) ) ) AS result FROM tryout_subject_scores ts JOIN subjects s ON ts.id_subject = s.subject_id JOIN subject_categories cs ON s.id_subject_category = cs.subject_category_id WHERE ts.id_tryout = ? AND ts.id_student = ? GROUP BY cs.subject_category_name`, { replacements: [idTryout, idStudent] })
+       return rows
+    } catch (err) {
+      throw err
     }
-
-    for (const cat in result) {
-      for (const subj in result[cat]) {
-        const sub = result[cat][subj]
-        sub.nilai_rata_rata = sub._totalMaxScore > 0 ? Math.round((sub._totalScore / sub._totalMaxScore) * 100) : 0
-        delete sub._totalScore
-        delete sub._totalMaxScore
-        delete sub._totalSoal
-      }
-    }
-    return result
   }
 
     static async getExpSubjectById(idSubject) {
@@ -486,6 +422,15 @@ class tryoutModel {
         { replacements: [idSubject] }
       )
       return rows[0]
+    } catch (err) {
+      throw err
+    }
+  }
+
+  static async getScoreByTryoutId(idTryout, idStudent) {
+    try {
+      const [result] = await db.query(`select average_score, total_correct, total_wrong, total_empty from tryout_scores where id_tryout = ? and id_student = ?`, {replacements: [idTryout, idStudent]})
+      return result
     } catch (err) {
       throw err
     }
@@ -631,126 +576,6 @@ class tryoutModel {
       throw err
     }
   }
-
-
-  /**
-   * Menghitung dan memasukkan nilai per subject dalam tryout.
-   * Mekanismenya:
-   *   - Untuk tiap soal dalam tryout dan subject tertentu, ambil:
-   *       • Nilai soal (q.score)
-   *       • Jawaban siswa (dari students_answers via answer_options)
-   *       • Jawaban yang benar (dari questions_explanations via answer_options)
-   *   - Hitung:
-   *       • obtained_score: IF(student_answer = correct_answer, q.score, 0)
-   *       • correct: IF(student_answer = correct_answer, 1, 0)
-   *       • wrong: IF(student_answer IS NOT NULL AND student_answer <> correct_answer, 1, 0)
-   *   - Agregasi tiap soal (GROUP BY q.question_id) sehingga setiap soal dihitung satu kali.
-   *   - Hitung total soal kosong: total_questions - (correct + wrong)
-   *   - Simpan hasil ke tabel tryout_subject_scores.
-   */
-  // static async insertSubjectScore({ tryoutId, studentId, subjectId }) {
-  //   try {
-  //     // Query untuk mengagregasi nilai per soal pada tryout & subject
-  //     const [scoreResults] = await db.query(
-  //       `
-  //       SELECT 
-  //         SUM( IF(subSa.student_answer = subQe.correct_answer, q.score, 0) ) AS total_score,
-  //         SUM( IF(subSa.student_answer = subQe.correct_answer, 1, 0) ) AS correct,
-  //         SUM( IF(subSa.student_answer IS NOT NULL AND subSa.student_answer <> subQe.correct_answer, 1, 0) ) AS wrong
-  //       FROM questions q
-  //       LEFT JOIN (
-  //          SELECT sa.id_student, sa.answer_options_id AS student_answer, ao.id_question
-  //          FROM students_answers sa
-  //          JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
-  //          WHERE sa.id_student = ?
-  //       ) AS subSa ON q.question_id = subSa.id_question
-  //       LEFT JOIN (
-  //          SELECT ao.id_question, MIN(qe.id_answer_option) AS correct_answer
-  //          FROM questions_explanations qe
-  //          JOIN answer_options ao ON ao.answer_option_id = qe.id_answer_option
-  //          GROUP BY ao.id_question
-  //       ) AS subQe ON q.question_id = subQe.id_question
-  //       WHERE q.id_tryout = ? AND q.id_subject = ?
-  //       `,
-  //       { replacements: [studentId, tryoutId, subjectId] }
-  //     );
-
-  //     // Ambil total soal dan total nilai maksimum untuk subject
-  //     const [totalInfo] = await db.query(
-  //       `SELECT COUNT(*) AS total_questions, SUM(score) AS max_possible_score FROM questions q WHERE q.id_tryout = 1 AND q.id_subject = 1;`,
-  //       { replacements: [tryoutId, subjectId] }
-  //     );
-
-  //     const totalQuestions = totalInfo[0]
-  //     const totalCorrect   = scoreResults[0]
-  //     const totalWrong     = scoreResults[0]
-  //     const totalScore     = scoreResults[0]
-
-  //     // Soal kosong: setiap soal di subject yang tidak dijawab atau tidak mendapatkan nilai (harusnya 0 jika tryout lengkap)
-  //     const totalEmpty = totalQuestions - (totalCorrect + totalWrong);
-
-  //     // Gunakan nilai mentah sebagai averageScore (misalnya total poin yang diperoleh)
-  //     const averageScore = totalScore;
-      
-  //     // Masukkan ke tabel tryout_subject_scores
-  //     const [result] = await db.query(
-  //       `
-  //       INSERT INTO tryout_subject_scores 
-  //         (id_student, id_subject, id_tryout, average_score, total_correct, total_wrong, total_empty)
-  //       VALUES (?, ?, ?, ?, ?, ?, ?)
-  //       `,
-  //       { 
-  //         replacements: [studentId, subjectId, tryoutId, averageScore, totalCorrect, totalWrong, totalEmpty ]
-  //       }
-  //     );
-  //     return result;
-  //   } catch (err) {
-  //     throw err;
-  //   }
-  // }
-
-  /**
-   * Mengagregasikan nilai dari tiap subject dalam tryout untuk mendapatkan nilai keseluruhan.
-   */
-  static async getTryoutAggregatedScores(tryoutId, studentId) {
-    try {
-      const [results] = await db.query(
-        `
-        SELECT 
-          ROUND(AVG(average_score)) AS average_score,
-          SUM(total_correct) AS total_correct,
-          SUM(total_wrong) AS total_wrong,
-          SUM(total_empty) AS total_empty
-        FROM tryout_subject_scores
-        WHERE id_tryout = ? AND id_student = ?
-        `,
-        { replacements: [tryoutId, studentId] }
-      );
-      return results[0];
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  /**
-   * Memasukkan nilai final tryout ke dalam tabel tryout_scores.
-   */
-  static async insertFinalTryoutScore({ studentId, tryoutId, average, correct, wrong, empty }) {
-    try {
-      const [result] = await db.query(
-        `
-        INSERT INTO tryout_scores
-          (id_student, id_tryout, average_score, total_correct, total_wrong, total_empty)
-        VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        { replacements: [studentId, tryoutId, average, correct, wrong, empty] }
-      );
-      return result;
-    } catch (err) {
-      throw err;
-    }
-  }
-  
 }
 
 module.exports = tryoutModel
