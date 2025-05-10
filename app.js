@@ -9,7 +9,7 @@ const port = process.env.PORT
 
 const { db, connectDB } = require('./config/database/connection');
 
-var { teacher, admin, information, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation} = require('./config/database/table/controler')
+var { teacher, admin, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation} = require('./config/database/table/controler')
 
 var app = express();
 

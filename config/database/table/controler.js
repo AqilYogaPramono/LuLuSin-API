@@ -1,6 +1,5 @@
 const teacher = require('./teacherTable')
 const admin = require('./adminTable')
-const information = require('./informationTable')
 const subjectcategory = require('./subjectCategoryTable')
 const tryout = require('./tryoutTable')
 const tryoutScore = require('./tryoutScoreTable')
@@ -51,4 +50,4 @@ tryoutScore.belongsTo(student, {foreignKey: `id_student`, onDelete: 'CASCADE', h
 tryout.hasMany(tryoutScore, {foreignKey: `id_tryout`, onDelete: 'CASCADE', hooks: true})
 tryoutScore.belongsTo(tryout, {foreignKey: `id_tryout`, onDelete: 'CASCADE', hooks: true})
 
-module.exports = { teacher, admin, information, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation }
+module.exports = { teacher, admin, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation }
