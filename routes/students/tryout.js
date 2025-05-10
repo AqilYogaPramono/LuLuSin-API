@@ -173,7 +173,7 @@ router.get('/student/tryout/:idTryout/result', verifyToken, authorize(['student'
     const idStudent = req.user.id
     const { idTryout } = req.params
 
-    const summary = await tryoutModel.getTryoutResult(idTryout, idStudent)
+    const summary = await tryoutModel.getScoreByTryoutId(idTryout, idStudent)
     const perCategorySubject = await tryoutModel.getTryoutResultByCategorySubject(idTryout, idStudent)
 
     res.status(200).json({ summary, perCategorySubject })
