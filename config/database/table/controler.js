@@ -36,10 +36,19 @@ studentsanswer.belongsTo(answeroption, {foreignKey: 'answer_options_id', onDelet
 questionsExplanation.hasMany(studentsanswer, {foreignKey: 'id_answer_option', onDelete: 'CASCADE', hooks: true})
 studentsanswer.belongsTo(questionsExplanation, {foreignKey: 'id_answer_option', onDelete: 'CASCADE', hooks: true})
 
-studentsanswer.hasMany(tryoutsubjectscore, {foreignKey: 'id_student_answer', onDelete: 'CASCADE', hooks: true})
-tryoutsubjectscore.belongsTo(studentsanswer, {foreignKey: 'id_student_answer', onDelete: 'CASCADE', hooks: true})
+student.hasMany(tryoutsubjectscore, {foreignKey: `id_student`, onDelete: 'CASCADE', hooks: true})
+tryoutsubjectscore.belongsTo(student, {foreignKey: `id_student`, onDelete: 'CASCADE', hooks: true})
 
-tryoutsubjectscore.hasMany(tryoutScore, {foreignKey: 'id_tryout_subject_score', onDelete: 'CASCADE', hooks: true})
-tryoutScore.belongsTo(tryoutsubjectscore, {foreignKey: 'id_tryout_subject_score', onDelete: 'CASCADE', hooks: true})
+subject.hasMany(tryoutsubjectscore, {foreignKey: `id_subject`, onDelete: 'CASCADE', hooks: true})
+tryoutsubjectscore.belongsTo(subject, {foreignKey: `id_subject`, onDelete: 'CASCADE', hooks: true})
+
+tryout.hasMany(tryoutsubjectscore, {foreignKey: `id_tryout`, onDelete: 'CASCADE', hooks: true})
+tryoutsubjectscore.belongsTo(tryout, {foreignKey: `id_tryout`, onDelete: 'CASCADE', hooks: true})
+
+student.hasMany(tryoutScore, {foreignKey: `id_student`, onDelete: 'CASCADE', hooks: true})
+tryoutScore.belongsTo(student, {foreignKey: `id_student`, onDelete: 'CASCADE', hooks: true})
+
+tryout.hasMany(tryoutScore, {foreignKey: `id_tryout`, onDelete: 'CASCADE', hooks: true})
+tryoutScore.belongsTo(tryout, {foreignKey: `id_tryout`, onDelete: 'CASCADE', hooks: true})
 
 module.exports = { teacher, admin, information, subjectcategory, tryout, tryoutScore, studentsanswer, student, tryoutsubjectscore, answeroption, question, subject, questionsExplanation }

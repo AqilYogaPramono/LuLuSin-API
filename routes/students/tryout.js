@@ -115,6 +115,42 @@ router.get('/student/:idSubject/transition', verifyToken, authorize(['student'])
   }
 })
 
+router.post("/student/tryout/:tryoutId/finalize", verifyToken, authorize(["student"]), async (req, res) => {
+  const {tryoutId}  = req.params
+  const studentId = req.user.id;
+
+  try { 
+    const isScoreAlreadyCalculated = await tryoutModel.isScoreAlreadyCalculated(tryoutId, studentId);
+    if (isScoreAlreadyCalculated) {
+      return res.status(400).json({ message: "Tryout ini sudah dinilai sebelumnya." });
+    }
+    
+    const totalQuestions = await tryoutModel.getTotalQuestionsInTryout(tryoutId);
+    const totalAnswered = await tryoutModel.getTotalAnsweredQuestions(tryoutId, studentId);
+
+    if (totalQuestions !== totalAnswered) {
+      return res.status(400).json({ message: "Tryout belum lengkap dijawab." });
+    }
+
+    const subjectIds = await tryoutModel.getSubjectsInTryout(tryoutId);
+
+  for (const subjectId of subjectIds) {
+    await tryoutModel.insertSubjectScore({ tryoutId, studentId, subjectId });
+  }
+
+  const checkScoreTryout = await tryoutModel.checkTryOutScore(studentId, tryoutId)
+  if (!checkScoreTryout) {
+    return res.status(400).json({ message: "Tryout ini sudah dinilai sebelumnya."})
+  }
+  await tryoutModel.TryoutAggregatedScores(tryoutId)
+
+    res.status(200).json({ message: "CREATED"});
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 //menampilkan soal, gambar soal, opsi jawaban, jawaban benar, jawaban siswa, pembahasan soal
 router.get("/student/tryout/:idTryout/:idSubject/explanation", verifyToken, authorize(['student']), async (req, res, next) => {
   const { idTryout, idSubject } = req.params
