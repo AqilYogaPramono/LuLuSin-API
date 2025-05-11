@@ -441,7 +441,7 @@ class tryoutModel {
     }
   }
 
-  static async getTryoutDetailResult(idTryout, idStudent) {
+  static async getTryoutDetailResult(idTryout, idStudent, idSubject) { 
     const [rows] = await db.query(`
       SELECT 
         q.question_id AS id_question,
@@ -459,10 +459,12 @@ class tryoutModel {
       LEFT JOIN answer_options sa2 ON sa.answer_options_id = sa2.answer_option_id
       LEFT JOIN questions_explanations qe ON qe.id_answer_option = ao.answer_option_id
       LEFT JOIN answer_options ao_correct ON qe.id_answer_option = ao_correct.answer_option_id
-      WHERE q.id_tryout = :idTryout
+      WHERE q.id_tryout = :idTryout AND q.id_subject = :idSubject
       ORDER BY q.question_id, ao.answer_option_id
-    `, { replacements: { idTryout, idStudent } })
-
+    `, { 
+      replacements: { idTryout, idStudent, idSubject } 
+    })
+  
     const map = new Map()
     for (const row of rows) {
       if (!map.has(row.id_question)) {
@@ -481,7 +483,7 @@ class tryoutModel {
       if (!soal.correct_answer && row.correct_answer) soal.correct_answer = row.correct_answer
     }
     return Array.from(map.values())
-  }
+  } 
 
     static async isScoreAlreadyCalculated(tryoutId, studentId) {
       try {
