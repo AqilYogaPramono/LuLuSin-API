@@ -11,7 +11,7 @@ router.get('/admin/teacher', verifyToken, authorize(['admin']), async (req, res)
     } catch (error) {
       res.status(500).json({ message: error.message })
     }
-  })
+})
   
 // store new data teacher
 router.post('/admin/teacher/store', verifyToken, authorize(['admin']), async (req, res) => {
@@ -36,6 +36,27 @@ router.post('/admin/teacher/store', verifyToken, authorize(['admin']), async (re
         })
     } catch (error) {
         res.status(500).json({ message: error.message })
+    }
+})
+
+//update data teacher with id
+router.patch('/admin/teacher/update/:id', verifyToken, authorize(['admin']), async (req, res) => {
+    try {
+      const teacherId = req.params.id
+      const { teacher_name, NUPTK, email, password } = req.body
+      if (!teacher_name || !NUPTK || !email || !password) {
+        return res.status(400).json({ message: 'Semua field wajib diisi.' })
+      }
+      const data = {
+        teacher_name,
+        NUPTK,
+        email,
+        password
+      }
+      await teacherModel.updateTeacher(teacherId, data)
+      res.status(200).json({ message: 'OK' })
+    } catch (error) {
+      res.status(500).json({ message: error.message })
     }
 })
   
