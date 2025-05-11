@@ -43,6 +43,18 @@ class teacherModel {
             throw err
         }
     }
+
+    static async updateTeacher(teacherId, data) {
+        try {
+            const [result] = await db.query(
+                `UPDATE teachers SET teacher_name = ?, NUPTK = ?, email = ?, password = ? WHERE teacher_id = ?`,
+                { replacements: [data.teacher_name, data.NUPTK, data.email, data.password, teacherId] }
+            )
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = teacherModel;
