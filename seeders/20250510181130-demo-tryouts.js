@@ -8,7 +8,7 @@ module.exports = {
      */
     await queryInterface.bulkInsert('tryouts', [
       { tryout_name: 'Tryout Sudah Dikerjakan', status: 'show' },
-      { tryout_name: 'Tryout Belum Dikerjakan', status: 'show' },
+      { tryout_name: 'Tryout Sudah Dikerjakan', status: 'show' },
       { tryout_name: 'Tryout Belum Dikerjakan', status: 'show' },
       { tryout_name: 'Tryout Belum Publish', status: 'hide' }
     ], {});
