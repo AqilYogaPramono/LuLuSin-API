@@ -159,7 +159,7 @@ router.get("/student/tryout/:idTryout/:idSubject/explanation", verifyToken, auth
   try {
     const studentData = await tryoutModel.getStudentById(idStudent)
     const subjectExpData = await tryoutModel.getExpSubjectById(idSubject)
-    const detail = await tryoutModel.getTryoutDetailResult(idTryout, idStudent)
+    const detail = await tryoutModel.getTryoutDetailResult(idTryout, idStudent, idSubject)
 
     res.status(200).json({ studentData, subjectExpData, detail })
   } catch (error) {
