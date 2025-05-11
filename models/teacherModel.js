@@ -30,6 +30,19 @@ class teacherModel {
             throw err
         }
     }
+
+    static async store(data) {
+        try {
+            const defaultPassword = 'Lulusin123'
+            const [result] = await db.query(
+                "INSERT INTO teachers (teacher_name, NUPTK, email, password) VALUES (?, ?, ?, ?)",
+                { replacements: [data.teacher_name, data.NUPTK, data.email, defaultPassword] }
+            )
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = teacherModel;

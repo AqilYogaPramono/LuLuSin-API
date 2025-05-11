@@ -13,5 +13,30 @@ router.get('/admin/teacher', verifyToken, authorize(['admin']), async (req, res)
     }
   })
   
+// store new data teacher
+router.post('/admin/teacher/store', verifyToken, authorize(['admin']), async (req, res) => {
+    try {
+        const { teacher_name, NUPTK, email } = req.body
+        
+        if (!teacher_name || !NUPTK || !email) {
+            return res.status(400).json({ 
+                message: 'Missing required fields',
+                required: ['teacher_name', 'NUPTK', 'email']
+            })
+        }
 
+        const result = await teacherModel.store({
+            teacher_name,
+            NUPTK,
+            email
+        })
+        
+        res.status(201).json({
+            message: 'CREATED',
+        })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+  
 module.exports = router;
