@@ -599,9 +599,9 @@ class tryoutModel {
     }
   }
   
-  static async TryoutAggregatedScores(tryoutId) {
+  static async TryoutAggregatedScores(studentId, tryoutId) {
     try {
-      const [result] = await db.query(`INSERT INTO tryout_scores (id_student, id_tryout, average_score, total_correct, total_wrong, total_empty) SELECT id_student, id_tryout, CAST(FLOOR(AVG(average_score)) AS SIGNED) AS average_score, SUM(total_correct) AS total_correct, SUM(total_wrong) AS total_wrong, SUM(total_empty) AS total_empty FROM tryout_subject_scores WHERE id_tryout = ? GROUP BY id_student, id_tryout`, {replacements: [tryoutId]})
+      const [result] = await db.query(`INSERT INTO tryout_scores (id_student, id_tryout, average_score, total_correct, total_wrong, total_empty) SELECT id_student, id_tryout, CAST(FLOOR(AVG(average_score)) AS SIGNED) AS average_score, SUM(total_correct) AS total_correct, SUM(total_wrong) AS total_wrong, SUM(total_empty) AS total_empty FROM tryout_subject_scores WHERE id_tryout = ? AND id_student = ? GROUP BY id_student, id_tryout`, {replacements: [tryoutId, studentId]})
       return result
     } catch (err) {
       throw err
