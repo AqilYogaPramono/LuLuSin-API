@@ -59,5 +59,16 @@ router.patch('/admin/teacher/update/:id', verifyToken, authorize(['admin']), asy
       res.status(500).json({ message: error.message })
     }
 })
-  
+
+//detele dengan id data guru
+router.delete('/admin/teacher/delete/:id', verifyToken, authorize(['admin']), async (req, res) => {
+  try {
+    const teacherId = req.params.id
+    await teacherModel.deleteTeacher(teacherId)
+    res.status(200).json({ message: 'OK' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
 module.exports = router;
