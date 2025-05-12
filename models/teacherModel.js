@@ -55,6 +55,15 @@ class teacherModel {
             throw err
         }
     }
+
+    static async deleteTeacher(teacherId) {
+        try {
+            const [result] = await db.query("DELETE FROM teachers WHERE teacher_id = ?", { replacements: [teacherId] })
+            return result
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = teacherModel;
