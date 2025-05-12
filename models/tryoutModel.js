@@ -331,7 +331,7 @@ class tryoutModel {
     }
   }
 
-  static async updateStudentAnswer({ idStudent, questionId, answerOptionId }) {
+  static async updateStudentAnswer(answerOptionId, idStudent, questionId) {
     const [result] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ? )`, {
         replacements: [answerOptionId, idStudent, questionId]
       }
