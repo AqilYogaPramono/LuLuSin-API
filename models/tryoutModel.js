@@ -331,7 +331,23 @@ class tryoutModel {
     }
   }
 
-  static async updateStudentAnswer(answerOptionId, idStudent, questionId) {
+  static async updateStudentAnswer(answerOptionId, idStudent, questionId, idTryout, idSubject) {
+    const [checkQuestion] = await db.query(
+    `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
+    }
+  )
+    if(checkQuestion == 0) {
+      throw new Error('Soal tidak sesuai dengan tryout dan subjek')
+    }
+  
+      const [checkAnswerOption] = await db.query(
+        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId]
+        }
+      )
+      if(checkAnswerOption == 0) {
+        throw new Error('Opsi jawaban tidak valid untuk soal ini')
+      }
+
     const [result] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ? )`, {
         replacements: [answerOptionId, idStudent, questionId]
       }

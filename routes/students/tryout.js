@@ -72,14 +72,10 @@ router.post('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyTok
 router.patch('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res) => {
   try {
     const idStudent = req.user.id
-    const { questionId } = req.params
+    const { questionId, idTryout, idSubject } = req.params
     const { answerOptionId } = req.body
     
-    const result = await tryoutModel.updateStudentAnswer(answerOptionId, idStudent, questionId)
-
-      if (result.affectedRows == 0) {
-        return res.status(404).json({ message: 'Data jawaban tidak ditemukan atau tidak sesuai' })
-      }
+    const result = await tryoutModel.updateStudentAnswer(answerOptionId, idStudent, questionId, idTryout, idSubject)
 
       return res.status(200).json({ message: 'OK' })
     } catch (error) {
