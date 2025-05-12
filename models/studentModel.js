@@ -50,6 +50,15 @@ class studentModel {
             throw err
         }
     }
+
+    static async getAllStudents() {
+        try {
+            const [rows] = await db.query("SELECT student_name AS nama, NISN, email FROM students")
+            return rows
+        } catch (err) {
+            throw err
+        }
+    }
 }
 
 module.exports = studentModel

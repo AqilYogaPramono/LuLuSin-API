@@ -1,8 +1,17 @@
 var express = require('express');
 var router = express.Router();
+const studentModel = require('../../models/studentModel')
+const { verifyToken, authorize } = require('../../config/middleware/jwt')
 
-//menampilkan selurh data pada tabel guru kecuaali password
-//detele dengan id data guru
+//menampilkan seluruh data siswa
+router.get('/admin/student', verifyToken, authorize(['admin']), async (req, res) => {
+    try {
+      const students = await studentModel.getAllStudents()
+      res.status(200).json(students)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+})
 
 module.exports = router;
 
