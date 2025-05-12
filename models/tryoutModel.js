@@ -369,6 +369,14 @@ class tryoutModel {
 
   static async deleetStudentAnswer(questionId, idSubject, idTryout) {
     try {
+            const [checkQuestion] = await db.query(
+        `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
+        }
+      )
+      if(checkQuestion == 0) {
+        throw new Error('Soal tidak sesuai dengan tryout dan subjek')
+      }
+
         const [result] = await db.query("DELETE sa FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?", {replacements: [questionId, idTryout, idSubject]})
         return result
     } catch (err) {
