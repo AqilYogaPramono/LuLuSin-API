@@ -138,7 +138,7 @@ router.post("/student/tryout/:tryoutId/finalize", verifyToken, authorize(["stude
   if (!checkScoreTryout) {
     return res.status(400).json({ message: "Tryout ini sudah dinilai sebelumnya."})
   }
-  await tryoutModel.TryoutAggregatedScores(tryoutId)
+  await tryoutModel.TryoutAggregatedScores(studentId, tryoutId)
 
     res.status(200).json({ message: "CREATED"});
   } catch (error) {
