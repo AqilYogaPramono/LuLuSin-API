@@ -73,11 +73,11 @@ router.patch('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyTo
   try {
     const idStudent = req.user.id
     const { questionId } = req.params
-    const { answer_option_id: answerOptionId } = req.body
+    const { answerOptionId } = req.body
     
-    const result = await tryoutModel.updateStudentAnswer(idStudent, questionId, answerOptionId)
+    const result = await tryoutModel.updateStudentAnswer(answerOptionId, idStudent, questionId)
 
-      if (result.affectedRows === 0) {
+      if (result.affectedRows == 0) {
         return res.status(404).json({ message: 'Data jawaban tidak ditemukan atau tidak sesuai' })
       }
 
