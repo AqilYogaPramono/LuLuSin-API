@@ -275,11 +275,54 @@ class tryoutModel {
     }
   }
 
-  static async getQuestionsBySubjectId(idSubject, idTryout) {
+  static async getQuestionsBySubjectId(idSubject, idTryout, studentId) {
     try {
       const [rows] = await db.query(
-        `WITH numbered_questions AS ( SELECT q.question_id, q.question_image, q.question, s.minimal_questions, ROW_NUMBER() OVER ( PARTITION BY q.id_subject, q.id_tryout ORDER BY q.question_id ) AS rn FROM questions AS q JOIN subjects AS s ON s.subject_id = q.id_subject WHERE q.id_subject = ? AND q.id_tryout = ? ), limited_questions AS ( SELECT question_id, question_image, question FROM numbered_questions WHERE rn <= minimal_questions ) SELECT lq.question_id, lq.question_image AS image_question, lq.question, JSON_ARRAYAGG( JSON_OBJECT( 'id', ao.answer_option_id, 'text', ao.answer_option ) ) AS answer_options FROM limited_questions AS lq JOIN answer_options AS ao ON ao.id_question = lq.question_id GROUP BY lq.question_id, lq.question_image, lq.question`,
-        { replacements: [idSubject, idTryout] }
+        `WITH numbered_questions AS (
+    SELECT
+        q.question_id,
+        q.question_image,
+        q.question,
+        s.minimal_questions,
+        ROW_NUMBER() OVER (
+            PARTITION BY q.id_subject, q.id_tryout
+            ORDER BY q.question_id
+        ) AS rn
+    FROM questions AS q
+    JOIN subjects AS s ON s.subject_id = q.id_subject
+    WHERE q.id_subject = ? AND q.id_tryout = ?
+),
+limited_questions AS (
+    SELECT
+        question_id,
+        question_image,
+        question
+    FROM numbered_questions
+    WHERE rn <= minimal_questions
+)
+SELECT
+    lq.question_id,
+    lq.question_image AS image_question,
+    lq.question,
+    (
+        SELECT sa.answer_options_id
+        FROM students_answers AS sa
+        JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
+        WHERE ao.id_question = lq.question_id
+        AND sa.id_student = ?
+        LIMIT 1
+    ) AS selected_answer_option_id,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id', ao.answer_option_id,
+            'text', ao.answer_option
+        )
+    ) AS answer_options
+FROM limited_questions AS lq
+JOIN answer_options AS ao ON ao.id_question = lq.question_id
+GROUP BY lq.question_id, lq.question_image, lq.question;
+`,
+        { replacements: [idSubject, idTryout, studentId] }
       )
       return rows
     } catch (err) {

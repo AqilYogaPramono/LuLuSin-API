@@ -39,13 +39,14 @@ router.get('/student/tryout', verifyToken, authorize(['student']), async (req, r
 
 //menampilkan soal, gambar soal dan opsi jawaban
 router.get("/student/tryout/:idTryout/:idSubject/taking", verifyToken, authorize(['student']), async (req, res, next) => {
+    const studentId = req.user.id
     const { idTryout, idSubject } = req.params
     const idStudent = req.user.id
   
     try {
       const studentData = await tryoutModel.getStudentById(idStudent)
       const subjectData = await tryoutModel.getSubjectById(idSubject)
-      const questionData = await tryoutModel.getQuestionsBySubjectId(idSubject, idTryout)
+      const questionData = await tryoutModel.getQuestionsBySubjectId(idSubject, idTryout, studentId)
       res.status(200).json({ studentData, subjectData, questionData })
     } catch (error) {
       res.status(500).json({ message: error.message })
@@ -124,7 +125,7 @@ router.get('/student/:idSubject/transition', verifyToken, authorize(['student'])
 
 router.post("/student/tryout/:tryoutId/finalize", verifyToken, authorize(["student"]), async (req, res) => {
   const {tryoutId}  = req.params
-  const studentId = req.user.id;
+  const studentId = req.user.id
 
   try { 
     const isScoreAlreadyCalculated = await tryoutModel.isScoreAlreadyCalculated(tryoutId, studentId);
