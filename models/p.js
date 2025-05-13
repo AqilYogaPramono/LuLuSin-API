@@ -159,10 +159,10 @@ class tryoutModel {
 
     static async deleteQuestionById(question_id, tryout_id, subject_id) {
       try {
-        await db.query(`DELETE FROM questions  WHERE question_id = ? AND id_tryout = ? AND id_subject = ?`, { replacements: [question_id, tryout_id, subject_id] })
-      } catch (error) {
-        throw error
-      }
+        await db.query(`DELETE FROM questions  WHERE question_id = ? AND id_tryout = ? AND id_subject = ?`, { replacements: [question_id,tryout_id, subject_id]}
+      )
+    } catch (error) {
+      throw error}
     }
 
     static async updateQuestionWithExplanation(questionId, data) {
@@ -188,14 +188,14 @@ class tryoutModel {
     
       try {
         await db.query(`UPDATE questions SET id_tryout = :tryout_id,id_subject = :subject_id,question = :question,question_image = :question_image,score = :score WHERE question_id = :questionId`,
-            {
-                replacements: { tryout_id, subject_id, question, question_image, score, questionId }, transaction,
-                type: QueryTypes.UPDATE,
-            }
+          {
+            replacements: { tryout_id, subject_id, question, question_image, score, questionId }, transaction,
+            type: QueryTypes.UPDATE,
+          }
         )
     
         const [existingOptions] = await db.query(`SELECT answer_option_id FROM answer_options WHERE id_question = :questionId ORDER BY answer_option_id ASC`,
-            { replacements: { questionId }, transaction }
+          { replacements: { questionId }, transaction }
         )
     
         if (!existingOptions || existingOptions.length !== 5) {
@@ -208,12 +208,12 @@ class tryoutModel {
           const answer_option_id = existingOptions[index].answer_option_id
     
           await db.query(`UPDATE answer_options SET answer_option = :option WHERE answer_option_id = :answer_option_id`,
-                {
-                    replacements: { option: value, answer_option_id },
-                    transaction,
-                    type: QueryTypes.UPDATE,
-                }
-            )
+            {
+              replacements: { option: value, answer_option_id },
+              transaction,
+              type: QueryTypes.UPDATE,
+            }
+          )
           updatedOptionIds.push(answer_option_id)
         }
     
@@ -224,25 +224,25 @@ class tryoutModel {
         const correct_answer_option_id = updatedOptionIds[correct_answer_index]
     
         const [explanationData] = await db.query(`SELECT questions_explanation_id FROM questions_explanations WHERE id_answer_option = :correct_answer_option_id`,
-            { replacements: { correct_answer_option_id }, transaction }
+          { replacements: { correct_answer_option_id }, transaction }
         )
     
         if (explanationData && explanationData.length > 0) {
           await db.query(`UPDATE questions_explanations SET question_explanation = :question_explanation WHERE id_answer_option = :correct_answer_option_id`,
-                {
-                    replacements: { question_explanation, correct_answer_option_id },
-                    transaction,
-                    type: QueryTypes.UPDATE,
-                }
-            )
+            {
+              replacements: { question_explanation, correct_answer_option_id },
+              transaction,
+              type: QueryTypes.UPDATE,
+            }
+          )
         } else {
           await db.query(`INSERT INTO questions_explanations (id_answer_option, question_explanation) VALUES (:correct_answer_option_id, :question_explanation)`,
-                {
-                    replacements: { correct_answer_option_id, question_explanation },
-                    transaction,
-                    type: QueryTypes.INSERT,
-                }
-            )
+            {
+              replacements: { correct_answer_option_id, question_explanation },
+              transaction,
+              type: QueryTypes.INSERT,
+            }
+          )
         }        
     
         await transaction.commit()
@@ -290,14 +290,16 @@ class tryoutModel {
   static async storeStudentAnswer({ idStudent, questionId, answerOptionId, idSubject, idTryout }) {
     try {
       const [checkQuestion] = await db.query(
-        `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject] }
+        `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
+        }
       )
       if(checkQuestion == 0) {
         throw new Error('Soal tidak sesuai dengan tryout dan subjek')
       }
   
       const [checkAnswerOption] = await db.query(
-        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId] }
+        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId]
+        }
       )
       if(checkAnswerOption == 0) {
         throw new Error('Opsi jawaban tidak valid untuk soal ini')
@@ -316,7 +318,8 @@ class tryoutModel {
       }
 
       const [explRow] = await db.query(
-        `SELECT qe.questions_explanation_id FROM questions_explanations qe JOIN answer_options ao ON qe.id_answer_option = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ?`, { replacements: [questionId] }
+        `SELECT qe.questions_explanation_id FROM questions_explanations qe JOIN answer_options ao ON qe.id_answer_option = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ?`, { replacements: [questionId]
+        }
       )
       const questionsExplanationId = explRow[0].questions_explanation_id
   
@@ -328,9 +331,24 @@ class tryoutModel {
     }
   }
 
-//#epdate
-  static async updateStudentAnswer( idStudent, questionId, answerOptionId ) {
-    const [result] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ?)`, {
+  static async updateStudentAnswer(answerOptionId, idStudent, questionId, idTryout, idSubject) {
+    const [checkQuestion] = await db.query(
+    `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
+    }
+  )
+    if(checkQuestion == 0) {
+      throw new Error('Soal tidak sesuai dengan tryout dan subjek')
+    }
+  
+      const [checkAnswerOption] = await db.query(
+        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId]
+        }
+      )
+      if(checkAnswerOption == 0) {
+        throw new Error('Opsi jawaban tidak valid untuk soal ini')
+      }
+
+    const [result] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ? )`, {
         replacements: [answerOptionId, idStudent, questionId]
       }
     )
@@ -351,23 +369,18 @@ class tryoutModel {
 
   static async deleetStudentAnswer(questionId, idSubject, idTryout) {
     try {
+            const [checkQuestion] = await db.query(
+        `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
+        }
+      )
+      if(checkQuestion == 0) {
+        throw new Error('Soal tidak sesuai dengan tryout dan subjek')
+      }
+
         const [result] = await db.query("DELETE sa FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?", {replacements: [questionId, idTryout, idSubject]})
         return result
     } catch (err) {
         throw err
-    }
-  }
-
-  static async checkQuestion(questionId, idTryout, idSubject) {
-    try {
-      const [result] = await db.query(
-        `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject]
-        }
-      )
-      
-      return result
-    } catch (err) {
-      throw err
     }
   }
 
@@ -383,7 +396,7 @@ class tryoutModel {
         SELECT sa.answer_options_id, ao.id_question
         FROM students_answers sa
         JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
-        WHERE sa.id_student = ?
+        WHERE sa.id_student = :idStudent
       ) sa ON sa.id_question = q.question_id
       LEFT JOIN questions_explanations qe ON qe.id_answer_option = (
         SELECT ao2.answer_option_id
@@ -392,7 +405,7 @@ class tryoutModel {
         AND ao2.answer_option_id = qe.id_answer_option
         LIMIT 1
       )
-      WHERE q.id_tryout = ?
+      WHERE q.id_tryout = :idTryout
     `, { replacements: { idStudent, idTryout } })
   
     let totalScore = 0
@@ -452,8 +465,7 @@ class tryoutModel {
     }
   }
 
-  //#udpate
-  static async getTryoutDetailResult(idTryout, idStudent, idSubject) {
+  static async getTryoutDetailResult(idTryout, idStudent, idSubject) { 
     const [rows] = await db.query(`
       SELECT 
         q.question_id AS id_question,
@@ -464,18 +476,19 @@ class tryoutModel {
         sa.answer_options_id AS student_answer_option_id,
         sa2.answer_option AS jawaban_siswa,
         qe.id_answer_option AS correct_answer_option_id,
-        ao_correct.answer_option AS correct_answer,
-        qe.question_explanation AS explanation
+        ao_correct.answer_option AS correct_answer
       FROM questions q
       LEFT JOIN answer_options ao ON ao.id_question = q.question_id
-      LEFT JOIN students_answers sa ON sa.answer_options_id = ao.answer_option_id AND sa.id_student = ?
+      LEFT JOIN students_answers sa ON sa.answer_options_id = ao.answer_option_id AND sa.id_student = :idStudent
       LEFT JOIN answer_options sa2 ON sa.answer_options_id = sa2.answer_option_id
       LEFT JOIN questions_explanations qe ON qe.id_answer_option = ao.answer_option_id
       LEFT JOIN answer_options ao_correct ON qe.id_answer_option = ao_correct.answer_option_id
-      WHERE q.id_tryout = ? AND q.id_subject = ?
+      WHERE q.id_tryout = :idTryout AND q.id_subject = :idSubject
       ORDER BY q.question_id, ao.answer_option_id
-    `, { replacements: [idStudent, idTryout, idSubject] })
-
+    `, { 
+      replacements: { idTryout, idStudent, idSubject } 
+    })
+  
     const map = new Map()
     for (const row of rows) {
       if (!map.has(row.id_question)) {
@@ -485,15 +498,13 @@ class tryoutModel {
           question: row.question,
           answer_options: [],
           jawaban_siswa: null,
-          correct_answer: null,
-          explanation: null
+          correct_answer: null
         })
       }
       const soal = map.get(row.id_question)
       soal.answer_options.push(row.answer_option)
       if (!soal.jawaban_siswa && row.jawaban_siswa) soal.jawaban_siswa = row.jawaban_siswa
       if (!soal.correct_answer && row.correct_answer) soal.correct_answer = row.correct_answer
-      if (!soal.explanation && row.explanation) soal.explanation = row.explanation
     }
     return Array.from(map.values())
   } 
