@@ -7,10 +7,10 @@ module.exports = {
      * Add seed commands here. Assumes timestamps are disabled.
      */
     await queryInterface.bulkInsert('tryouts', [
-      { tryout_name: 'Tryout Sudah Dikerjakan', status: 'show' },
-      { tryout_name: 'Tryout Sudah Dikerjakan', status: 'show' },
-      { tryout_name: 'Tryout Belum Dikerjakan', status: 'show' },
-      { tryout_name: 'Tryout Belum Publish', status: 'hide' }
+      { tryout_name: 'Tryout Episode 1', status: 'show' },
+      { tryout_name: 'Tryout Episode 2', status: 'show' },
+      { tryout_name: 'Tryout Episode 3', status: 'show' },
+      { tryout_name: 'Tryout Episode 4', status: 'hide' }
     ], {});
   },
 
