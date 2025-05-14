@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var jwt = require('jsonwebtoken')
 
 //post untuk melakukan logout
 router.post('/logout', (req, res) => {
