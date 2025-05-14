@@ -94,7 +94,7 @@ router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teac
     try {
         let tryoutQuestionBySubject = await tryout.getAllTryoutQuestionBySubject(tryoutId, subjectId)
         let subject = await tryout.getSubjectByIdSubject(subjectId)
-        res.status(200).json({ subject, tryoutQuestionBySubject })
+        res.status(200).json({ subject, tryoutQuestionBySubject, data: req.session.tempQuestionData })
     } catch (error) {
         res.status(500).json ({ message: error.message })
     }
@@ -103,7 +103,7 @@ router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teac
 //post soal dan opsi soal
 router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToken, authorize(['teacher']), uploudPhoto.single('question_image'), async (req, res, next) => {
   try {
-    const { tryout_id, subject_id } = req.params
+    const {tryout_id, subject_id} = req.params
     let { question, score, answer_options } = req.body
 
     if (!question) return res.status(400).json({ message: 'question is required.' })
@@ -113,55 +113,65 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToke
       answer_options = [answer_options]
     }
 
-    req.session.tempQuestionData = { question, score, answer_options, question_image: req.file ? req.file.filename : null }
 
-    res.status(201).json({ message: "CREATED TO SESSION" })
+    req.session.tempQuestionData = { tryout_id, subject_id, question, score, answer_options, question_image: req.file ? req.file.filename : null }
+
+    res.status(201).json({
+    message: "CREATED TO SESSION",
+    questionData: req.session.tempQuestionData,
+    sessionId: req.sessionID
+  })
   } catch (error) {
-    next(error)
+    res.status(500).json({ message: error.message });
   }
 })
 
 //post jawaban benar dan pembahasan 
-router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_explanation', verifyToken, authorize(['teacher']), async (req, res, next) => {
-  const { tryout_id, subject_id } = req.params
-
-  let { correct_answer_index, question_explanation } = req.body
-
-  if (!correct_answer_index) return res.status(400).json({ message: 'correct_answer_index is required.' })
-
-  if (typeof correct_answer_index === "undefined") {
-    return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
-  }
-
-  correct_answer_index = parseInt(correct_answer_index, 10)
-
-  if (isNaN(correct_answer_index) || correct_answer_index < 0) {
-    return res.status(400).json({ message: "Indeks jawaban benar tidak valid." })
-  }
-
-  if (
-    typeof question_explanation === "undefined" ||
-    question_explanation.trim() === ""
-  ) {
-    return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." })
-  }
-
-  if (!req.session || !req.session.tempQuestionData) {
-    return res.status(400).json({ message: "Data soal sementara tidak ditemukan, mohon mulai dari awal." })
-  }
-
-  const tempData = req.session.tempQuestionData
-  const finalData = { tryout_id, subject_id, question: tempData.question, question_image: tempData.question_image, score: tempData.score, answer_options: tempData.answer_options, correct_answer_index, question_explanation: question_explanation.trim() }
-
-
+router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_explanation', verifyToken, authorize(['teacher']), async (req, res) => {
   try {
-    await tryout.storeQuestionWithExplanation(finalData)
-    req.session.tempQuestionData = null
-    res.status(201).json({ message: "OK" })
+    const { tryout_id, subject_id } = req.params;
+    let { correct_answer_index, question_explanation } = req.body;
+
+    const parsedIndex = parseInt(correct_answer_index, 10);
+
+    if (!Number.isInteger(parsedIndex) || parsedIndex < 0) {
+      return res.status(400).json({ message: "Indeks jawaban benar tidak valid." });
+    }
+
+    if (!question_explanation || question_explanation.trim() === "") {
+      return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." });
+    }
+
+    const tempData = req.session.tempQuestionData;
+    if (!req.session || !req.session.tempQuestionData) {
+      return res.status(400).json({ message: "Data soal sementara tidak ditemukan, mohon mulai dari awal." });
+    }
+
+    if (parsedIndex >= tempData.answer_options.length) {
+      return res.status(400).json({ message: "Indeks jawaban benar melebihi jumlah pilihan jawaban." });
+    }
+
+    const finalData = {
+      tryout_id,
+      subject_id,
+      question: tempData.question,
+      question_image: tempData.question_image || null,
+      score: tempData.score,
+      answer_options: tempData.answer_options,
+      correct_answer_index: parsedIndex,
+      question_explanation: question_explanation.trim()
+    };
+
+    await tryout.storeQuestionWithExplanation(finalData);
+
+    delete req.session.tempQuestionData;
+
+    res.status(201).json({ message: "Soal dan pembahasan berhasil disimpan." });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
+
 
 // patch question and answer options
 router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id',verifyToken,authorize(['teacher']),uploudPhoto.single('question_image'),deleteOldImageIfReplaced,async (req, res, next) => {
@@ -176,6 +186,8 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id'
       }
 
       const question_image = req.file ? req.file.filename : null
+
+      req.session.tempQuestionData = {tryout_id, subject_id, question_id,question,score,answer_options,question_image}
 
       req.session.tempQuestionData = {question,score,answer_options,question_image}
 
@@ -227,15 +239,16 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id/
 //delete soal by id question
 router.delete('/teacher/tryout/:tryout_id/:subject_id/:question_id/delete', verifyToken, authorize(['teacher']), deleteQuestionImage, async (req, res) => {
   try {
-    const { question_id, tryout_id, subject_id } = req.params
+    const { tryout_id, subject_id, question_id } = req.params; 
+    console.log(`Tryout ID: ${tryout_id}, Subject ID: ${subject_id}, Question ID: ${question_id}`);
 
-    await tryout.deleteQuestionById(question_id, tryout_id, subject_id)
+    await tryout.deleteQuestionById(question_id, tryout_id, subject_id);
 
-    res.status(200).json({ message: 'OK' })
+    res.status(200).json({ message: 'Question successfully deleted' });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
-)
+});
+
 
 module.exports = router
