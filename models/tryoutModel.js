@@ -397,6 +397,17 @@ GROUP BY lq.question_id, lq.question_image, lq.question;
     return result
   }
 
+  static async checkAnswerOption(questionId, answerOptionId) {
+    try {
+      const [result] = await db.query(
+        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId] }
+      )
+      return result
+    } catch (err) {
+      throw err
+    }
+  }
+
   static async getTryoutName(idTryout) {
     try {
       const [rows] = await db.query(`select tryout_id, tryout_name from tryouts where tryout_id = ?`,
