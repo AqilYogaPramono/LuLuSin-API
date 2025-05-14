@@ -33,7 +33,10 @@ class studentModel {
 
     static async getDoneTryouts(idStudent) {
         try {
-            const [result] = await db.query(`SELECT DISTINCT t.tryout_id, t.tryout_name FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id JOIN tryouts t ON q.id_tryout = t.tryout_id WHERE sa.id_student = ? AND t.status = 'show'`, [idStudent])
+            const [result] = await db.query(
+                `SELECT DISTINCT t.tryout_id, t.tryout_name FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id JOIN tryouts t ON q.id_tryout = t.tryout_id WHERE sa.id_student = ? AND t.status = 'show'`,
+                { replacements: [idStudent] }
+            )
             return result
         } catch (err) {
             throw err
@@ -42,7 +45,10 @@ class studentModel {
     
     static async getNotDoneTryouts(idStudent) {
         try {
-            const [result] = await db.query(`SELECT t.tryout_id, t.tryout_name FROM tryouts t WHERE t.status = 'show' AND t.tryout_id NOT IN ( SELECT q.id_tryout FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE sa.id_student = ? )`, [idStudent])
+            const [result] = await db.query(
+                `SELECT t.tryout_id, t.tryout_name FROM tryouts t WHERE t.status = 'show' AND t.tryout_id NOT IN ( SELECT q.id_tryout FROM students_answers sa JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE sa.id_student = ? )`,
+                { replacements: [idStudent] }
+            )
             return result
         } catch (err) {
             throw err
@@ -66,6 +72,15 @@ class studentModel {
             throw err
         }
     }
+
+    static async getTop3TryoutScoresByStudentId(idStudent) {
+        try {
+          const [rows] = await db.query(`SELECT ts.id_tryout, t.tryout_name, ts.average_score FROM tryout_scores ts JOIN tryouts t ON ts.id_tryout = t.tryout_id WHERE ts.id_student = ? ORDER BY ts.average_score DESC LIMIT 3`, { replacements: [idStudent] });
+          return rows;
+        } catch (err) {
+          throw err;
+        }
+      }
 }
 
 module.exports = studentModel

@@ -12,7 +12,9 @@ router.get('/student/dashboard', verifyToken, authorize (['student']), async (re
         let idStudent = req.user.id
         
         const notDoneTryouts = await studentModel.getNotDoneTryouts(idStudent)
-        res.status(200).json ({ notDoneTryouts })
+        const topTryoutScores = await studentModel.getTop3TryoutScoresByStudentId(idStudent)
+        
+        res.status(200).json ({ notDoneTryouts, topTryoutScores })
     } catch (error) {
         res.status(500).json ({ message: error.message })
     }
