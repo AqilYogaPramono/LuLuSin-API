@@ -95,7 +95,7 @@ router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teac
     try {
         let tryoutQuestionBySubject = await tryout.getAllTryoutQuestionBySubject(tryoutId, subjectId)
         let subject = await tryout.getSubjectByIdSubject(subjectId)
-        res.status(200).json({ subject, tryoutQuestionBySubject })
+        res.status(200).json({ subject, tryoutQuestionBySubject, data: req.session.tempQuestionData })
     } catch (error) {
         res.status(500).json ({ message: error.message })
     }const handleNext = async (retryCount = 0) => {
@@ -190,7 +190,7 @@ router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teac
 //#ok
 router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToken, authorize(['teacher']), uploudPhoto.single('question_image'), async (req, res, next) => {
   try {
-    const { tryout_id, subject_id } = req.params
+    const {tryout_id, subject_id} = req.params
     let { question, score, answer_options } = req.body
 
     if (!question) return res.status(400).json({ message: 'question is required.' })
@@ -212,6 +212,7 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToke
     req.session.tempQuestionData = { question, score, answer_options, question_image: req.file ? req.file.filename : null }
 
     res.status(201).json({ message: "CREATED", answer_option_ids: insertedOptionIds });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -274,7 +275,7 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id'
   } catch (error) {
     next(error)
   }
-})
+});
 
 // patch answer explanation and correct answer
 router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id/edit_explanation',verifyToken,authorize(['teacher']),async (req, res, next) => {
@@ -317,15 +318,16 @@ router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id/
 //delete soal by id question
 router.delete('/teacher/tryout/:tryout_id/:subject_id/:question_id/delete', verifyToken, authorize(['teacher']), deleteQuestionImage, async (req, res) => {
   try {
-    const { question_id, tryout_id, subject_id } = req.params
+    const { tryout_id, subject_id, question_id } = req.params; 
+    console.log(`Tryout ID: ${tryout_id}, Subject ID: ${subject_id}, Question ID: ${question_id}`);
 
-    await tryout.deleteQuestionById(question_id, tryout_id, subject_id)
+    await tryout.deleteQuestionById(question_id, tryout_id, subject_id);
 
-    res.status(200).json({ message: 'OK' })
+    res.status(200).json({ message: 'Question successfully deleted' });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
-)
+});
+
 
 module.exports = router
