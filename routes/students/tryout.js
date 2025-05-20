@@ -28,7 +28,6 @@ router.get('/student/tryout', verifyToken, authorize(['student']), async (req, r
     try {
       const { idTryout } = req.params
 
-      const getSubject = await subjectModel.getTotalQuestionAndTotalTime()
       const getTryout = await tryoutModel.getTryoutName(idTryout)
 
       res.status(200).json({ data: getSubject, getTryout })
@@ -38,6 +37,7 @@ router.get('/student/tryout', verifyToken, authorize(['student']), async (req, r
   })
 
 //menampilkan soal, gambar soal dan opsi jawaban
+//#ok
 router.get("/student/tryout/:idTryout/:idSubject/taking", verifyToken, authorize(['student']), async (req, res, next) => {
     const studentId = req.user.id
     const { idTryout, idSubject } = req.params
@@ -54,55 +54,65 @@ router.get("/student/tryout/:idTryout/:idSubject/taking", verifyToken, authorize
   })
 
   //membuat jawaban siswa dan membandingkannya dengan jawaban benar
-router.post('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
-  try {
-    const idStudent      = req.user.id
-    const { questionId, idTryout, idSubject } = req.params
-    const { answerOptionId } = req.body
-    
-    await tryoutModel.storeStudentAnswer({ idStudent, questionId, answerOptionId, idSubject, idTryout })
-    return res.status(201).json({ message: 'CREATED' })
+
+//Ok
+  router.post('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
+    try {
+      const idStudent = req.user.id
+      const { questionId, idTryout, idSubject } = req.params
+      const { answerOptionId } = req.body
+  
+      const result = await tryoutModel.storeStudentAnswer({ 
+        idStudent, 
+        questionId, 
+        answerOptionId, 
+        idSubject, 
+        idTryout 
+      })
+      
+      return res.status(201).json({ message: 'CREATED' })
+  
 
     } catch (error) {
       res.status(500).json({ message: error.message })
     }
-  }
-)
+  })
 
 //update id siswa, id soal, id jawaban 
-//#udpate
+
+//void
 router.patch('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res) => {
   try {
     const idStudent = req.user.id
-    const { questionId, idTryout, idSubject } = req.params
-    const { answerOptionId } = req.body
-    
-    const result = await tryoutModel.updateStudentAnswer(idStudent, questionId, answerOptionId)
+    const { questionId } = req.params
+    const { answer_option_id: answerOptionId } = req.body
 
-    const check = await tryoutModel.checkAnswerOption(questionId, answerOptionId)
-    if (check == 0 ) {
-      return res.status(404).json({ message: 'Opsi jawaban tidak valid untuk soal ini' })
+
+    // PERBAIKI: Kirim parameter sebagai object
+    const result = await tryoutModel.updateStudentAnswer({ idStudent, questionId, answerOptionId })
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Data jawaban tidak ditemukan atau tidak sesuai' })
     }
 
-      return res.status(200).json({ message: 'OK' })
-    } catch (error) {
-      res.status(500).json({ message: error.message })
-    }
+    return res.status(200).json({ message: 'OK' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
   }
-)
+})
 
 //menghapus jawawabn yang pernah di inputkan siswa
-//#update
+
+//void
+
 router.delete('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyToken, authorize(['student']), async (req, res, next) => {
   try {
     const { questionId, idTryout, idSubject } = req.params
     
-    const check = await tryoutModel.checkQuestion(questionId, idTryout, idSubject)
-    if(check == 0) {
-      return res.status(404).json({ message: "Soal tidak sesuai dengan tryout dan subjek" })
-    }
 
-    await tryoutModel.deleetStudentAnswer(questionId, idSubject, idTryout)
+    const result = await tryoutModel.deleteStudentAnswer(questionId, idSubject, idTryout)
+    return res.status(201).json({ message: 'OK' })
+
 
     return res.status(201).json({ message: 'OK' })
     } catch (error) {
@@ -129,6 +139,9 @@ router.post("/student/tryout/:tryoutId/finalize", verifyToken, authorize(["stude
   const studentId = req.user.id
 
   try { 
+    // Tambahkan baris ini sebelum pengecekan totalAnswered
+    await tryoutModel.insertEmptyAnswersIfNotExist({ idStudent: studentId, idTryout: tryoutId });
+
     const isScoreAlreadyCalculated = await tryoutModel.isScoreAlreadyCalculated(tryoutId, studentId);
     if (isScoreAlreadyCalculated) {
       return res.status(400).json({ message: "Tryout ini sudah dinilai sebelumnya." });

@@ -88,6 +88,7 @@ router.patch('/teacher/tryout/:id/update_status', verifyToken, authorize(['teach
 })
 
 //get soal, opsi jawaban, jawaban benar, pembahasan
+//#ok
 router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teacher']), async (req, res, next) => {
     let { tryoutId, subjectId } = req.params
 
@@ -97,10 +98,96 @@ router.get('/teacher/tryout/:tryoutId/:subjectId', verifyToken, authorize(['teac
         res.status(200).json({ subject, tryoutQuestionBySubject, data: req.session.tempQuestionData })
     } catch (error) {
         res.status(500).json ({ message: error.message })
+    }const handleNext = async (retryCount = 0) => {
+  try {
+    setLoading(true);
+    setError("");
+    
+    // Validasi input yang lebih ketat
+    if (formData.correct_answer_index === null || formData.correct_answer_index === undefined || formData.correct_answer_index === "") {
+      setError('Jawaban benar harus dipilih.');
+      alert('Jawaban benar harus dipilih.');
+      setLoading(false);
+      return;
     }
+
+    // Parse ke integer dan validasi
+    const correct_answer_index = parseInt(formData.correct_answer_index, 10);
+    
+    if (isNaN(correct_answer_index) || correct_answer_index < 0) {
+      setError('Indeks jawaban benar tidak valid.');
+      alert('Indeks jawaban benar tidak valid.');
+      setLoading(false);
+      return;
+    }
+
+    // Validasi pembahasan
+    if (!formData.question_explanation?.trim()) {
+      setError('Pembahasan soal tidak boleh kosong.');
+      alert('Pembahasan soal tidak boleh kosong.');
+      setLoading(false);
+      return;
+    }
+
+    // LANGKAH 1: Kirim data soal ke session server
+    const formDataStep1 = new FormData();
+    formDataStep1.append('question', questionData.question || '');
+    formDataStep1.append('score', questionData.score || '');
+    
+    if (Array.isArray(questionData.answer_options)) {
+      questionData.answer_options.forEach((option) => {
+        if (option !== undefined && option !== null) {
+          formDataStep1.append('answer_options', option);
+        }
+      });
+    }
+    
+    const responseStep1 = await axiosInstance.post(
+      `/API/teacher/tryout/${tryout_id}/${subject_id}/create_question`,
+      formDataStep1,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      }
+    );
+    
+    if (responseStep1.status === 201) {
+      // LANGKAH 2: Kirim data pembahasan
+      const explanationData = {
+        id_answer_option: id_answer_option,
+        question_explanation: (formData.question_explanation || "").trim(),
+        tryout_id: parseInt(tryout_id),
+        subject_id: parseInt(subject_id)
+      };
+
+      const responseStep2 = await axiosInstance.post(
+        `/API/teacher/tryout/${tryout_id}/${subject_id}/create_question/create_explanation`,
+        explanationData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+      
+      if (responseStep2.status === 201) {
+        navigate(`/guru/tryout/${tryout_id}/${subject_id}`);
+        return;
+      }
+    }
+  } catch (error) {
+    console.error('Error submitting data:', error);
+    setError(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data');
+    setLoading(false);
+  } finally {
+    setLoading(false);
+  }
+}
 })
 
 //post soal dan opsi soal
+//#ok
 router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToken, authorize(['teacher']), uploudPhoto.single('question_image'), async (req, res, next) => {
   try {
     const {tryout_id, subject_id} = req.params
@@ -113,90 +200,82 @@ router.post('/teacher/tryout/:tryout_id/:subject_id/create_question', verifyToke
       answer_options = [answer_options]
     }
 
+    const { questionId, insertedOptionIds } = await tryout.storeQuestionWithOptions({
+      tryout_id,
+      subject_id,
+      question,
+      score,
+      answer_options,
+      question_image: req.file ? req.file.filename : null
+    });
 
-    req.session.tempQuestionData = { tryout_id, subject_id, question, score, answer_options, question_image: req.file ? req.file.filename : null }
+    req.session.tempQuestionData = { question, score, answer_options, question_image: req.file ? req.file.filename : null }
 
-    res.status(201).json({
-    message: "CREATED TO SESSION",
-    questionData: req.session.tempQuestionData,
-    sessionId: req.sessionID
-  })
+    res.status(201).json({ message: "CREATED", answer_option_ids: insertedOptionIds });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 })
 
-//post jawaban benar dan pembahasan 
-router.post('/teacher/tryout/:tryout_id/:subject_id/create_question/create_explanation', verifyToken, authorize(['teacher']), async (req, res) => {
-  try {
-    const { tryout_id, subject_id } = req.params;
-    let { correct_answer_index, question_explanation } = req.body;
-
-    const parsedIndex = parseInt(correct_answer_index, 10);
-
-    if (!Number.isInteger(parsedIndex) || parsedIndex < 0) {
-      return res.status(400).json({ message: "Indeks jawaban benar tidak valid." });
-    }
-
-    if (!question_explanation || question_explanation.trim() === "") {
-      return res.status(400).json({ message: "Pembahasan soal tidak boleh kosong." });
-    }
-
-    const tempData = req.session.tempQuestionData;
-    if (!req.session || !req.session.tempQuestionData) {
-      return res.status(400).json({ message: "Data soal sementara tidak ditemukan, mohon mulai dari awal." });
-    }
-
-    if (parsedIndex >= tempData.answer_options.length) {
-      return res.status(400).json({ message: "Indeks jawaban benar melebihi jumlah pilihan jawaban." });
-    }
-
-    const finalData = {
-      tryout_id,
-      subject_id,
-      question: tempData.question,
-      question_image: tempData.question_image || null,
-      score: tempData.score,
-      answer_options: tempData.answer_options,
-      correct_answer_index: parsedIndex,
-      question_explanation: question_explanation.trim()
-    };
-
-    await tryout.storeQuestionWithExplanation(finalData);
-
-    delete req.session.tempQuestionData;
-
-    res.status(201).json({ message: "Soal dan pembahasan berhasil disimpan." });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-
-// patch question and answer options
-router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id',verifyToken,authorize(['teacher']),uploudPhoto.single('question_image'),deleteOldImageIfReplaced,async (req, res, next) => {
+// post jawaban benar dan pembahasan 
+//#ok
+router.post('/teacher/tryout/:tryoutId/:subjectId', 
+  verifyToken, 
+  authorize(['teacher']), 
+  async (req, res, next) => {
     try {
-      const { tryout_id, subject_id, question_id } = req.params
-      let { question, score, answer_options } = req.body
-      if (!question) return res.status(400).json({ message: 'question is required.' })
-      if (!score) return res.status(400).json({ message: 'score is required.' })
-
-      if (!Array.isArray(answer_options)) {
-        answer_options = [answer_options]
+      const { id_answer_option, question_explanation } = req.body;
+      
+      if (!id_answer_option) {
+        return res.status(400).json({ message: 'id_answer_option is required.' });
+      }
+      if (!question_explanation || !question_explanation.trim()) {
+        return res.status(400).json({ message: 'question_explanation is required.' });
       }
 
-      const question_image = req.file ? req.file.filename : null
+      await tryout.storeExplanation({
+        id_answer_option: parseInt(id_answer_option),
+        question_explanation: question_explanation.trim()
+      });
 
-      req.session.tempQuestionData = {tryout_id, subject_id, question_id,question,score,answer_options,question_image}
-
-      req.session.tempQuestionData = {question,score,answer_options,question_image}
-
-      res.status(200).json({ message: "CREATED TO SESSION" })
+      res.status(201).json({ message: 'Explanation created successfully' });
     } catch (error) {
-      next(error)
+      res.status(500).json({ message: error.message });
     }
+});
+
+// patch question and answer options
+//#ok
+router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id', verifyToken, authorize(['teacher']), uploudPhoto.single('question_image'), deleteOldImageIfReplaced, async (req, res, next) => {
+  try {
+    const { tryout_id, subject_id, question_id } = req.params
+    let { question, score, answer_options } = req.body
+    if (!question) return res.status(400).json({ message: 'question is required.' })
+    if (!score) return res.status(400).json({ message: 'score is required.' })
+
+    if (!Array.isArray(answer_options)) {
+      answer_options = [answer_options]
+    }
+
+    const question_image = req.file ? req.file.filename : null
+
+    // Panggil fungsi update ke database
+    await tryout.updateQuestionById({
+      question_id,
+      tryout_id,
+      subject_id,
+      question,
+      score,
+      answer_options,
+      question_image
+    });
+
+    res.status(200).json({ message: "OK" })
+  } catch (error) {
+    next(error)
   }
-)
+});
 
 // patch answer explanation and correct answer
 router.patch('/teacher/tryout/:tryout_id/:subject_id/edit_question/:question_id/edit_explanation',verifyToken,authorize(['teacher']),async (req, res, next) => {

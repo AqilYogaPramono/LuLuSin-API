@@ -77,29 +77,31 @@ class tryoutModel {
         }
     }
 
-  static async getAllTryoutQuestionBySubject(tryoutId, subjectId) {
-    try {
-        const [rows] = await db.query(`
-            SELECT 
-                q.question_id, 
-                q.question AS question, 
-                q.question_image AS question_image, 
-                JSON_ARRAYAGG(JSON_OBJECT('answer_option', ao.answer_option)) AS answer_options, 
-                MAX(CASE WHEN qe.question_explanation IS NOT NULL THEN ao.answer_option ELSE NULL END) AS correct_answer, 
-                MAX(qe.question_explanation) AS explanation, 
-                q.score AS score 
-            FROM questions q 
-            JOIN answer_options ao ON q.question_id = ao.id_question 
-            LEFT JOIN questions_explanations qe ON ao.answer_option_id = qe.id_answer_option 
-            WHERE q.id_tryout = ? AND q.id_subject = ? 
-            GROUP BY q.question_id, q.question, q.question_image, q.score
-        `, { replacements: [tryoutId, subjectId] });
 
-        return rows;
-    } catch (err) {
-        throw err;
-    }
-}
+//#ok
+    static async getAllTryoutQuestionBySubject(tryoutId, subjectId) {
+      try {
+          const [rows] = await db.query(
+              `SELECT 
+                  q.question_id AS question_id, 
+                  q.question AS question, 
+                  q.question_image AS question_image, 
+                  JSON_ARRAYAGG(JSON_OBJECT('answer_option', ao.answer_option)) AS answer_options, 
+                  MAX(CASE WHEN qe.question_explanation IS NOT NULL THEN ao.answer_option ELSE NULL END) AS correct_answer, 
+                  MAX(qe.question_explanation) AS explanation, 
+                  q.score AS score 
+              FROM questions q 
+              JOIN answer_options ao ON q.question_id = ao.id_question 
+              LEFT JOIN questions_explanations qe ON ao.answer_option_id = qe.id_answer_option 
+              WHERE q.id_tryout = ? AND q.id_subject = ? 
+              GROUP BY q.question_id, q.question, q.question_image, q.score`,
+              {replacements: [tryoutId, subjectId]}
+          )
+          return rows
+      } catch (err) {
+          throw err
+      }
+  }
 
 
     static async storeQuestionWithExplanation(data) {
@@ -291,7 +293,9 @@ class tryoutModel {
     }
   }
 
-  static async getQuestionsBySubjectId(idSubject, idTryout, studentId) {
+
+//#ok
+  static async getQuestionsBySubjectId(idSubject, idTryout) {
     try {
       const [rows] = await db.query(
         `WITH numbered_questions AS (
@@ -346,49 +350,57 @@ GROUP BY lq.question_id, lq.question_image, lq.question;
     }
   }
 
+  //#ok
   static async storeStudentAnswer({ idStudent, questionId, answerOptionId, idSubject, idTryout }) {
     try {
       const [checkQuestion] = await db.query(
-        `SELECT q.question_id FROM questions q JOIN tryouts t ON q.id_tryout = t.tryout_id JOIN subjects s ON q.id_subject = s.subject_id WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, { replacements: [questionId, idTryout, idSubject] }
-      )
-      if(checkQuestion == 0) {
-        throw new Error('Soal tidak sesuai dengan tryout dan subjek')
+        `SELECT q.question_id FROM questions q 
+         JOIN tryouts t ON q.id_tryout = t.tryout_id 
+         JOIN subjects s ON q.id_subject = s.subject_id 
+         WHERE q.question_id = ? AND q.id_tryout = ? AND q.id_subject = ?`, 
+        { replacements: [questionId, idTryout, idSubject] }
+      );
+      if (checkQuestion == 0) {
+        throw new Error('Soal tidak sesuai dengan tryout dan subjek');
       }
   
-      const [checkAnswerOption] = await db.query(
-        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId] }
-      )
-      if(checkAnswerOption == 0) {
-        throw new Error('Opsi jawaban tidak valid untuk soal ini')
-      }
-      
+
       const [validationInsert] = await db.query(
         `SELECT COUNT(sa.student_answer_id) AS total
-         FROM answer_options ao
-         JOIN students_answers sa ON ao.answer_option_id = sa.answer_options_id
-         WHERE ao.id_question = ? AND sa.id_student = ?`, 
-        { replacements: [questionId, idStudent] }
+         FROM students_answers sa 
+         JOIN answer_options ao ON sa.answer_options_id = ao.answer_option_id
+         WHERE sa.id_student = ? AND ao.id_question = ?`, 
+        { replacements: [idStudent, questionId] }
       );
-      
       if (validationInsert[0].total > 0) {
         throw new Error('Siswa sudah menjawab soal ini');
       }
-
-      const [explRow] = await db.query(
-        `SELECT qe.questions_explanation_id FROM questions_explanations qe JOIN answer_options ao ON qe.id_answer_option = ao.answer_option_id JOIN questions q ON ao.id_question = q.question_id WHERE q.question_id = ?`, { replacements: [questionId] }
-      )
-      const questionsExplanationId = explRow[0].questions_explanation_id
   
-      const [insertResult] = await db.query(`INSERT INTO students_answers (id_student, answer_options_id, id_answer_option) VALUES (?, ?, ?)`, { replacements: [idStudent, answerOptionId, questionsExplanationId] }
-      )
-      return insertResult
+      // Ambil explanation id (boleh tetap ambil meski jawaban kosong)
+      const [explRow] = await db.query(
+        `SELECT qe.questions_explanation_id FROM questions_explanations qe 
+         JOIN answer_options ao ON qe.id_answer_option = ao.answer_option_id 
+         JOIN questions q ON ao.id_question = q.question_id 
+         WHERE q.question_id = ?`, 
+        { replacements: [questionId] }
+      );
+      const questionsExplanationId = explRow[0]?.questions_explanation_id || null;
+
+  
+      // Insert jawaban, biarkan answerOptionId null jika tidak dijawab
+      const [insertResult] = await db.query(
+        `INSERT INTO students_answers (id_student, answer_options_id, id_answer_option) 
+         VALUES (?, ?, ?)`, 
+        { replacements: [idStudent, answerOptionId, questionsExplanationId] }
+      );
+      return insertResult;
     } catch (err) {
-      throw err
+      throw err;
     }
   }
 
-//#epdate
-  static async updateStudentAnswer( idStudent, questionId, answerOptionId ) {
+
+  static async updateStudentAnswer({ idStudent, questionId, answerOptionId }) {
     const [result] = await db.query(`UPDATE students_answers SET answer_options_id = ? WHERE id_student = ? AND answer_options_id IN (SELECT answer_option_id FROM answer_options WHERE id_question = ?)`, {
         replacements: [answerOptionId, idStudent, questionId]
       }
@@ -397,20 +409,26 @@ GROUP BY lq.question_id, lq.question_image, lq.question;
     return result
   }
 
-  static async checkAnswerOption(questionId, answerOptionId) {
-    try {
-      const [result] = await db.query(
-        `SELECT ao.id_question FROM answer_options ao JOIN questions q ON ao.id_question = q.question_id WHERE ao.id_question = ? AND ao.answer_option_id = ?`, { replacements: [questionId, answerOptionId] }
-      )
-      return result
-    } catch (err) {
-      throw err
-    }
-  }
-
+  //#ok
   static async getTryoutName(idTryout) {
     try {
-      const [rows] = await db.query(`select tryout_id, tryout_name from tryouts where tryout_id = ?`,
+      const [rows] = await db.query(`
+        SELECT 
+          t.tryout_id, 
+          t.tryout_name,
+          JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'subject_id', s.subject_id,
+              'subject_name', s.subject_name,
+              'subject_category', sc.subject_category_name
+            )
+          ) as subjects
+        FROM tryouts t
+        JOIN questions q ON q.id_tryout = t.tryout_id
+        JOIN subjects s ON s.subject_id = q.id_subject
+        JOIN subject_categories sc ON sc.subject_category_id = s.id_subject_category
+        WHERE t.tryout_id = ?
+        GROUP BY t.tryout_id, t.tryout_name`,
         { replacements: [idTryout] }
       )
       return rows[0]
@@ -522,7 +540,6 @@ GROUP BY lq.question_id, lq.question_image, lq.question;
     }
   }
 
-  //#udpate
   static async getTryoutDetailResult(idTryout, idStudent, idSubject) {
     const [rows] = await db.query(`
       SELECT 
@@ -666,6 +683,114 @@ GROUP BY lq.question_id, lq.question_image, lq.question;
       throw err
     }
   }
+
+//#ok
+  static async storeExplanation(data) {
+    try {
+      const { id_answer_option, question_explanation } = data;
+      if (typeof id_answer_option !== 'number') {
+        throw new Error('id_answer_option must be a number');
+      }
+      if (typeof question_explanation !== 'string') {
+        throw new Error('question_explanation must be a string');
+      }
+      const [result] = await db.query(
+        "INSERT INTO questions_explanations (id_answer_option, question_explanation) VALUES (?, ?)",
+        {
+          replacements: [id_answer_option, question_explanation]
+        }
+      );
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+//#ok
+  static async storeQuestionWithOptions({ tryout_id, subject_id, question, score, answer_options, question_image }) {
+    const transaction = await db.transaction();
+    try {
+      const [questionId] = await db.query(
+        "INSERT INTO questions (id_tryout, id_subject, question, question_image, score) VALUES (?, ?, ?, ?, ?)",
+        { replacements: [tryout_id, subject_id, question, question_image, score], transaction, type: QueryTypes.INSERT }
+      );
+  
+      const insertedOptionIds = [];
+      for (const option of answer_options) {
+        const [optionId] = await db.query(
+          "INSERT INTO answer_options (id_question, answer_option) VALUES (?, ?)",
+          { replacements: [questionId, option], transaction, type: QueryTypes.INSERT }
+        );
+        insertedOptionIds.push(optionId);
+      }
+  
+      await transaction.commit();
+      return { questionId, insertedOptionIds };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+//#ok
+  static async updateQuestionById({ question_id, tryout_id, subject_id, question, score, answer_options, question_image }) {
+    // Update table questions
+    await db.query(
+      "UPDATE questions SET question = ?, score = ?, question_image = ? WHERE question_id = ? AND id_tryout = ? AND id_subject = ?",
+      { replacements: [question, score, question_image, question_id, tryout_id, subject_id] }
+    );
+    // Update answer options (opsional: update satu per satu atau hapus lalu insert ulang)
+    // Contoh update sederhana (pastikan urutan answer_options sama dengan di DB)
+    const [existingOptions] = await db.query(
+      "SELECT answer_option_id FROM answer_options WHERE id_question = ? ORDER BY answer_option_id ASC",
+      { replacements: [question_id] }
+    );
+    for (let i = 0; i < answer_options.length; i++) {
+      await db.query(
+        "UPDATE answer_options SET answer_option = ? WHERE answer_option_id = ?",
+        { replacements: [answer_options[i], existingOptions[i].answer_option_id] }
+      );
+    }
+  }
+
+  //salah
+static async insertEmptyAnswersIfNotExist({ idStudent, idTryout }) {
+  // Ambil semua soal di tryout ini
+  const [questions] = await db.query(
+    `SELECT question_id FROM questions WHERE tryout_id = ?`,
+    { replacements: [idTryout] }
+  );
+
+  for (const q of questions) {
+    // Cek apakah sudah ada jawaban untuk soal ini
+    const [exist] = await db.query(
+      `SELECT COUNT(*) as total FROM students_answers sa
+       JOIN answer_options ao ON sa.answer_option_id = ao.answer_option_id
+       WHERE sa.student_id = ? AND ao.question_id = ?`,
+      { replacements: [idStudent, q.question_id] }
+    );
+
+    if (exist[0].total == 0) {
+      // Ambil salah satu explanation_id dari soal ini
+      const [explanation] = await db.query(
+        `SELECT qe.explanation_id
+         FROM questions_explanations qe
+         JOIN answer_options ao ON qe.answer_option_id = ao.answer_option_id
+         WHERE ao.question_id = ?
+         LIMIT 1`,
+        { replacements: [q.question_id] }
+      );
+
+      const explanationId = explanation.length > 0 ? explanation[0].explanation_id : null;
+
+      await db.query(
+        `INSERT INTO students_answers (student_id, answer_option_id, explanation_id)
+         VALUES (?, NULL, ?)`,
+        { replacements: [idStudent, explanationId] }
+      );
+    }
+  }
+}
 }
 
 module.exports = tryoutModel
