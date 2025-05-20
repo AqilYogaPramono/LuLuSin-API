@@ -29,6 +29,7 @@ router.get('/student/tryout', verifyToken, authorize(['student']), async (req, r
       const { idTryout } = req.params
 
       const getTryout = await tryoutModel.getTryoutName(idTryout)
+      const getSubject = await subjectModel.getTotalQuestionAndTotalTime()
 
       res.status(200).json({ data: getSubject, getTryout })
     } catch (error) {
