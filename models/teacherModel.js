@@ -24,7 +24,7 @@ class teacherModel {
 
     static async getAllTeachers() {
         try {
-            const [rows] = await db.query("SELECT teacher_name AS nama, NUPTK, email FROM teachers")
+            const [rows] = await db.query("SELECT teacher_id, teacher_name, NUPTK, email FROM teachers")
             return rows
         } catch (err) {
             throw err

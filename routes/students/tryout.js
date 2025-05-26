@@ -139,9 +139,7 @@ router.post("/student/tryout/:tryoutId/finalize", verifyToken, authorize(["stude
   const {tryoutId}  = req.params
   const studentId = req.user.id
 
-  try { 
-    // Tambahkan baris ini sebelum pengecekan totalAnswered
-    await tryoutModel.insertEmptyAnswersIfNotExist({ idStudent: studentId, idTryout: tryoutId });
+    try { 
 
     const isScoreAlreadyCalculated = await tryoutModel.isScoreAlreadyCalculated(tryoutId, studentId);
     if (isScoreAlreadyCalculated) {
