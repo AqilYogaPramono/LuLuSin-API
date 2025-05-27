@@ -1,15 +1,15 @@
 const { db } = require('../config/database/connection')
+const bcrypt = require('bcryptjs')
 
 class studentModel {
     static async login(email) {
         try {
-            const [rows] = await db.query("select * from students where email = ?", {replacements: [email]})
-            if (rows.length === 0) {
-                return null
-            }
-            return rows[0]
+        const sql = 'SELECT * FROM students WHERE email = ?';
+        const [rows] = await db.query(sql, { replacements: [email] });
+        if (rows.length === 0) return null;
+        return rows[0];
         } catch (err) {
-            throw err
+            throw err;
         }
     }
 
@@ -24,7 +24,8 @@ class studentModel {
 
     static async register(data) {
         try {
-            const [result] = await db.query("insert into students set NISN = ?, student_name = ?, email = ?, password = ?", { replacements: [data.NISN, data.student_name, data.email, data.password] })
+            const hashedPassword = await bcrypt.hash(data.password, 10)
+            const [result] = await db.query("insert into students set NISN = ?, student_name = ?, email = ?, password = ?", { replacements: [data.NISN, data.student_name, data.email, hashedPassword] })
             return result
         } catch (err) {
             throw err
@@ -75,12 +76,12 @@ class studentModel {
 
     static async getTop3TryoutScoresByStudentId(idStudent) {
         try {
-          const [rows] = await db.query(`SELECT ts.id_tryout, t.tryout_name, ts.average_score FROM tryout_scores ts JOIN tryouts t ON ts.id_tryout = t.tryout_id WHERE ts.id_student = ? ORDER BY ts.average_score DESC LIMIT 3`, { replacements: [idStudent] });
-          return rows;
+            const [rows] = await db.query(`SELECT ts.id_tryout, t.tryout_name, ts.average_score FROM tryout_scores ts JOIN tryouts t ON ts.id_tryout = t.tryout_id WHERE ts.id_student = ? ORDER BY ts.average_score DESC LIMIT 3`, { replacements: [idStudent] })
+            return rows
         } catch (err) {
-          throw err;
+            throw err
         }
-      }
+    }
 }
 
 module.exports = studentModel
