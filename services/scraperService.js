@@ -1,4 +1,3 @@
-// npm install puppeteer express
 const puppeteer = require('puppeteer')
 
 const URL = 'https://snbt.utbkcak.com/'
