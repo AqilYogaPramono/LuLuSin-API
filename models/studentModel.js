@@ -25,7 +25,10 @@ class studentModel {
     static async register(data) {
         try {
             const hashedPassword = await bcrypt.hash(data.password, 10)
-            const [result] = await db.query("insert into students set NISN = ?, student_name = ?, email = ?, password = ?", { replacements: [data.NISN, data.student_name, data.email, hashedPassword] })
+            const [result] = await db.query(
+                "insert into students set NISN = ?, student_name = ?, email = ?, password = ?, status = 'process'", 
+                { replacements: [data.NISN, data.student_name, data.email, hashedPassword] }
+            )
             return result
         } catch (err) {
             throw err
@@ -58,7 +61,7 @@ class studentModel {
 
     static async getAllStudents() {
         try {
-            const [rows] = await db.query("SELECT student_id, student_name AS nama, NISN, email FROM students")
+            const [rows] = await db.query("SELECT student_id, student_name AS nama, NISN, email, status FROM students")
             return rows
         } catch (err) {
             throw err
@@ -78,6 +81,18 @@ class studentModel {
         try {
             const [rows] = await db.query(`SELECT ts.id_tryout, t.tryout_name, ts.average_score FROM tryout_scores ts JOIN tryouts t ON ts.id_tryout = t.tryout_id WHERE ts.id_student = ? ORDER BY ts.average_score DESC LIMIT 3`, { replacements: [idStudent] })
             return rows
+        } catch (err) {
+            throw err
+        }
+    }
+
+    static async updateStudentStatus(studentId, status) {
+        try {
+            const [result] = await db.query(
+                "UPDATE students SET status = ? WHERE student_id = ?",
+                { replacements: [status, studentId] }
+            )
+            return result
         } catch (err) {
             throw err
         }
