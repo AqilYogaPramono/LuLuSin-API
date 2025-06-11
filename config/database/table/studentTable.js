@@ -16,7 +16,11 @@ const studentTable = db.define(`student`,{
         type: DataTypes.STRING,
         unique: true
     },
-    password: DataTypes.STRING
+    password: DataTypes.STRING,
+    status: {
+        type: DataTypes.ENUM('process', 'accept', 'reject'),
+        defaultValue: 'process'
+    }
 }, {
     timestamps: false
 })
