@@ -469,13 +469,35 @@ class tryoutModel {
   }
 
   static async getTryoutResultByCategorySubject(idTryout, idStudent) {
-    try {
-      const [rows] = await db.query(`SELECT JSON_OBJECT( 'nama_kategori', cs.subject_category_name, 'subjek', JSON_ARRAYAGG( JSON_OBJECT( 'nama_subjek', s.subject_name, 'nilai_rata_rata', ts.average_score, 'total_jawaban_benar', ts.total_correct, 'total_jawaban_salah', ts.total_wrong, 'total_jawaban_kosong', ts.total_empty ) ) ) AS result FROM tryout_subject_scores ts JOIN subjects s ON ts.id_subject = s.subject_id JOIN subject_categories cs ON s.id_subject_category = cs.subject_category_id WHERE ts.id_tryout = ? AND ts.id_student = ? GROUP BY cs.subject_category_name`, { replacements: [idTryout, idStudent] })
-       return rows
-    } catch (err) {
-      throw err
-    }
+  try {
+    // Query SQL diambil dari Canvas dan dimasukkan ke sini
+    const sqlQuery = `
+      SELECT JSON_OBJECT(
+        'nama_kategori', cs.subject_category_name,
+        'subjek', JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id_subjek', CAST(s.subject_id AS CHAR),
+                'nama_subjek', s.subject_name,
+                'nilai_rata_rata', ts.average_score,
+                'total_jawaban_benar', ts.total_correct,
+                'total_jawaban_salah', ts.total_wrong,
+                'total_jawaban_kosong', ts.total_empty
+            )
+        )
+      ) AS result 
+      FROM tryout_subject_scores ts
+      JOIN subjects s ON ts.id_subject = s.subject_id 
+      JOIN subject_categories cs ON s.id_subject_category = cs.subject_category_id
+      WHERE ts.id_tryout = ? AND ts.id_student = ?
+      GROUP BY cs.subject_category_id, cs.subject_category_name 
+      ORDER BY cs.subject_category_name;
+    `;
+    const [rows] = await db.query(sqlQuery, { replacements: [idTryout, idStudent] });
+    return rows;
+  } catch (err) {
+    throw err;
   }
+}
 
     static async getExpSubjectById(idSubject) {
     try {
@@ -490,7 +512,7 @@ class tryoutModel {
 
   static async getScoreByTryoutId(idTryout, idStudent) {
     try {
-      const [result] = await db.query(`select average_score, total_correct, total_wrong, total_empty from tryout_scores where id_tryout = ? and id_student = ?`, {replacements: [idTryout, idStudent]})
+      const [result] = await db.query(`select id_tryout, average_score, total_correct, total_wrong, total_empty from tryout_scores where id_tryout = ? and id_student = ?`, {replacements: [idTryout, idStudent]})
       return result
     } catch (err) {
       throw err
@@ -566,11 +588,11 @@ class tryoutModel {
       }
     }
 
-  static async getTotalAnsweredQuestions(tryoutId, studentId) {
+  static async getTotalAnsweredQuestions(studentId, tryoutId) {
     try {
       const [rows] = await db.query(
         `SELECT COUNT(*) AS total FROM ( SELECT q.question_id FROM questions q JOIN answer_options ao ON ao.id_question = q.question_id LEFT JOIN students_answers sa ON sa.answer_options_id = ao.answer_option_id AND sa.id_student = ? WHERE q.id_tryout = ? GROUP BY q.question_id ) AS answered`,
-        { replacements: [tryoutId, studentId] }
+        { replacements: [studentId, tryoutId] }
       );
       return rows[0].total
     } catch (err) {

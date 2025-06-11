@@ -31,7 +31,7 @@ router.get('/student/tryout', verifyToken, authorize(['student']), async (req, r
       const getTryout = await tryoutModel.getTryoutName(idTryout)
       const getSubject = await subjectModel.getTotalQuestionAndTotalTime()
 
-      res.status(200).json({ data: getSubject, getTryout })
+      res.status(200).json({ dataTryout: getSubject, getTryout })
     } catch (error) {
       res.status(500).json({ message: error.message })
     }
@@ -86,7 +86,7 @@ router.patch('/student/tryout/:idTryout/:idSubject/:questionId/taking', verifyTo
   try {
     const idStudent = req.user.id
     const { questionId } = req.params
-    const { answer_option_id: answerOptionId } = req.body
+    const { answerOptionId } = req.body
 
 
     // PERBAIKI: Kirim parameter sebagai object
@@ -147,7 +147,7 @@ router.post("/student/tryout/:tryoutId/finalize", verifyToken, authorize(["stude
     }
     
     const totalQuestions = await tryoutModel.getTotalQuestionsInTryout(tryoutId);
-    const totalAnswered = await tryoutModel.getTotalAnsweredQuestions(tryoutId, studentId);
+    const totalAnswered = await tryoutModel.getTotalAnsweredQuestions(studentId, tryoutId);
 
     if (totalQuestions !== totalAnswered) {
       return res.status(400).json({ message: "Tryout belum lengkap dijawab." });
