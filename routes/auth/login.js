@@ -19,35 +19,41 @@ const bcrypt = require('bcryptjs')
 
         user = await student.login(email);
         if (user) {
-        userType = 'student';
-        } else {
-        user = await teacher.login(email);
-        if (user) {
-            userType = 'teacher';
-        } else {
-            user = await admin.login(email);
-            if (user) {
-            userType = 'admin';
+            if (user.status === 'reject') {
+                return res.status(403).json({ message: 'Your registration has been rejected' });
             }
-        }
+            if (user.status === 'process') {
+                return res.status(403).json({ message: 'Your registration is still being processed' });
+            }
+            userType = 'student';
+        } else {
+            user = await teacher.login(email);
+            if (user) {
+                userType = 'teacher';
+            } else {
+                user = await admin.login(email);
+                if (user) {
+                    userType = 'admin';
+                }
+            }
         }
 
         if (!user) return res.status(401).json({ message: 'Email wrong' });
 
         if (userType === 'student') {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(401).json({ message: 'Password wrong' });
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) return res.status(401).json({ message: 'Password wrong' });
         } else {
-        if (password !== user.password) return res.status(401).json({ message: 'Password wrong' });
+            if (password !== user.password) return res.status(401).json({ message: 'Password wrong' });
         }
 
         let payload = {};
         if (userType === 'student') {
-        payload = { id: user.student_id, username: user.student_name, type: 'student' };
+            payload = { id: user.student_id, username: user.student_name, type: 'student' };
         } else if (userType === 'teacher') {
-        payload = { id: user.teacher_id, username: user.teacher_name, type: 'teacher' };
+            payload = { id: user.teacher_id, username: user.teacher_name, type: 'teacher' };
         } else if (userType === 'admin') {
-        payload = { id: user.admin_id, username: user.admin_name, type: 'admin' };
+            payload = { id: user.admin_id, username: user.admin_name, type: 'admin' };
         }
 
         const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '100d' });

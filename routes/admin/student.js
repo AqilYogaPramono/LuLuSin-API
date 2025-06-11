@@ -13,6 +13,23 @@ router.get('/admin/student', verifyToken, authorize(['admin']), async (req, res)
     }
 })
 
+//update status siswa
+router.patch('/admin/student/:id/status', verifyToken, authorize(['admin']), async (req, res) => {
+    try {
+        const studentId = req.params.id
+        const { status } = req.body
+
+        if (!status || !['accept', 'reject'].includes(status)) {
+            return res.status(400).json({ message: 'Invalid status. Must be either "accept" or "reject"' })
+        }
+
+        await studentModel.updateStudentStatus(studentId, status)
+        res.status(200).json({ message: 'Student status updated successfully' })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
 //delete data siswa berdasarkan id
 router.delete('/admin/student/delete/:id', verifyToken, authorize(['admin']), async (req, res) => {
     try {
